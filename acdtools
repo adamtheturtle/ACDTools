@@ -259,7 +259,7 @@ function ACDToolsUpload {
 	        sleep 60
 	    done
 	else
-		echo "${MOUNTBASE}/local-encrypted/* is empty - nothing to upload"
+		ACDToolsLog info "${MOUNTBASE}/local-encrypted/* is empty - nothing to upload"
 	fi
 
     ACDToolsLog info "Upload Complete - Syncing changes"
