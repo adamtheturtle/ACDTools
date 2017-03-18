@@ -241,7 +241,9 @@ function ACDToolsUpload {
     fi
 
     # Upload to Amazon Drive
-	if [ "$(ls -A ${MOUNTBASE}/local-encrypted/*)" ]; then
+	# Redirect error to `/dev/null` so as not to pollute the output with an
+	# `Input/output error`.
+	if [ "$(ls -A ${MOUNTBASE}/local-encrypted/* 2> /dev/null)" ] ; then
 	    until ${ACDCLI} upload -o ${ACDEXCLUDE} ${MOUNTBASE}/local-encrypted/* \
 	        ${ACDSUBDIR}
 	    do
