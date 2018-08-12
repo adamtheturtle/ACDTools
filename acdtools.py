@@ -19,12 +19,15 @@ def _validate_config(
     value: Optional[Union[int, bool, str]],
 ) -> Dict[str, str]:
     required_keys = set([
-        'mount_base',
         'data_dir',
-        'encfs_pass',
-        'path_on_cloud_drive',
         'days_to_keep_local',
         'encfs6_config',
+        'encfs_pass',
+        'mount_base',
+        'path_on_cloud_drive',
+        'plexdrive',
+        'rclone',
+        'rclone_remote',
     ])
     optional_keys = set(['http_proxy', 'https_proxy'])
 
