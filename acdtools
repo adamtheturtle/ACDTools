@@ -171,6 +171,7 @@ function ACDToolsUpload {
             if [ "${ULATTEMPTS}" -ge 5 ]; then
                 ACDToolsLog error "Upload failed 5 times - giving up"
                 exit 1
+            fi
             sleep 60
         done
     else
