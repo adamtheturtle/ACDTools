@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 from typing import Callable
 
@@ -17,12 +18,24 @@ def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
 
 
 # TODO make this run on the group
-def _dependency_check():
+def _dependency_check() -> None:
     # TODO fill in
-    pass
+    dependencies = (
+        acd_cli_binary,
+        'unionfs-fuse',
+        'encfs',
+        'screen',
+    )
+    for dependency in dependencies:
+        if shutil.which(dependency) is None:
+            message = '"{dependency}" is not available on the PATH.'.format(
+                dependency=dependency,
+            )
+
+            click.fail(message=message)
 
 
-def _unmount(mountpoint: Path):
+def _unmount(mountpoint: Path) -> None:
     """
     Unmount a mountpoint. Will not unmount if not already mounted.
     """
