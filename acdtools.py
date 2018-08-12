@@ -1,12 +1,19 @@
 import logging
 from pathlib import Path
+from typing import Callable
+
+import click
 
 logger = logging.getLogger(__name__)
 
 # TODO make public functions click commands
 
-# TODO common click option -c, --config-path
-# default to pwd/vars
+
+def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
+    """
+    """
+    # TODO common click option -c, --config-path
+    # default to pwd/vars
 
 
 # TODO make this run on the group
