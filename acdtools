@@ -1,19 +1,5 @@
 #!/bin/bash
 
-
-# Unmount a mountpoint. Will not unmount if not already mounted.
-# TODO: fusermount does not exist on OS X, make compatible.
-function ACDToolsUnmount {
-    # Check if ${1} is a mountpoint (remove trailing slash)
-    ISMOUNTPOINT=`mount | grep ${1%/} | wc -l`
-    if [ ${ISMOUNTPOINT} -eq "0" ]; then
-        ACDToolsLog warning "Can not unmount ${1} - it is not mounted"
-    else
-        ACDToolsLog info "Unmounting ${1}"
-        fusermount -u ${1}
-    fi
-}
-
 # Function to unmount all mountpoints associated with ACDTools
 function ACDToolsUnmountAll {
     ACDToolsLog info "Unmounting all ACDTools mountpoints"
