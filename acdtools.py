@@ -76,11 +76,15 @@ def sync_deletes() -> None:
     # TODO fill in
     pass
 
+def _mount() -> None:
+    # TODO fill in
+    pass
+
 
 def mount() -> None:
     unmount_all()
     sync_nodes()
-    # TODO the actual mount
+    _mount()
 
 
 def acd_cli_mount() -> None:
