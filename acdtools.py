@@ -61,12 +61,20 @@ def _validate_config(
 
 
 
-def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
+def config_option(command: Callable[..., None]) -> Callable[..., None]:
     """
     """
-    # TODO common click option -c, --config-path
-    # default to pwd/vars
-    # TODO validator validates config
+    default_config_path = Path(__file__) / 'vars'
+
+    function = click.option(
+        '--config',
+        '-c',
+        type=click.Path(exists=True),
+        callback=_validate_config,
+        default=default_config_path,
+        help='The path to a file including configuration YAML.',
+    )(command)  # type: Callable[..., None]
+    return function
 
 
 # TODO make this run on the group
@@ -107,7 +115,7 @@ def _unmount(mountpoint: Path) -> None:
     subprocess.run(args=unmount_args, check=True)
 
 
-@config_path_option
+@config_option
 def unmount_all(config: Dict[str, str]) -> None:
     message = 'Unmounting all ACDTools moundpoints'
     logger.info(message)
