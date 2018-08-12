@@ -1,37 +1,5 @@
 #!/bin/bash
 
-# Determine configuration file path and load it
-
-# If -c is set, then set that value as ${OPTARG}
-while getopts ":c:" opt; do
-    case $opt in
-        c)
-            ACDToolsLog info "User defined configuration file at ${OPTARG}"
-            CONFOPT=${OPTARG}
-            ;;
-    esac
-done
-
-if [ ${CONFOPT} ] && [ -f ${CONFOPT} ]; then
-    # Ensure user defined configuration exists
-    CONFIGPATH=${CONFOPT}
-elif [ -f ${PWD}/vars ]; then
-    # Check if configuration exists in PWD
-    CONFIGPATH=${PWD}/vars
-elif [ -f ${DIR}/vars ]; then
-    # Check if configuration exists in the script directory
-    CONFIGPATH=${DIR}/vars
-fi
-
-# If no valid configuation path, kill the script.
-if [ ! ${CONFIGPATH} ]; then
-    ACDToolsLog error 'No valid configuration can be found. \
-        Use -c to define a configuration.'
-    exit 1
-else
-    ACDToolsLog info "Using configuration at ${CONFIGPATH}"
-    source ${CONFIGPATH}
-fi
 
 # TODO: Config validity
 # Functions

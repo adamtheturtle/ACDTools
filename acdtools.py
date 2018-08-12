@@ -15,6 +15,7 @@ def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
     """
     # TODO common click option -c, --config-path
     # default to pwd/vars
+    # TODO validator validates config
 
 
 # TODO make this run on the group
