@@ -123,6 +123,11 @@ def unmount_all(config: Dict[str, str]) -> None:
     message = 'Unmounting all ACDTools moundpoints'
     logger.info(message)
 
+    data_dir = Path(config['data_dir'])
+    mount_base = Path(config['mount_base'])
+
+    unmount_lock_file = Path(__file__) / 'unmount.acd'
+
     # mountpoints = (
     #     data_dir,
     #     mountbase / 'acd-encrypted',
@@ -132,6 +137,7 @@ def unmount_all(config: Dict[str, str]) -> None:
     #
     # for mountpoint in mountpoints:
     #     _unmount(mountpoint)
+    # TODO fill in
 
 
 def upload() -> None:
