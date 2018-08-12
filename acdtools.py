@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 # TODO make public functions click commands
 
 # TODO common click option -c, --config-path
+# default to pwd/vars
 
 
 # TODO make this run on the group

@@ -1,40 +1,5 @@
 #!/bin/bash
 
-# Set directory of current script
-# http://stackoverflow.com/a/246128/811814
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-SCRIPTPATH="${DIR}/$(basename ${0})"
-
-
-# Determine configuration file path and load it
-
-# If -c is set, then set that value as ${OPTARG}
-while getopts ":c:" opt; do
-    case $opt in
-        c)
-            ACDToolsLog info "User defined configuration file at ${OPTARG}"
-            CONFOPT=${OPTARG}
-            ;;
-    esac
-done
-
-if [ ${CONFOPT} ] && [ -f ${CONFOPT} ]; then
-    # Ensure user defined configuration exists
-    CONFIGPATH=${CONFOPT}
-elif [ -f ${PWD}/vars ]; then
-    # Check if configuration exists in PWD
-    CONFIGPATH=${PWD}/vars
-elif [ -f ${DIR}/vars ]; then
-    # Check if configuration exists in the script directory
-    CONFIGPATH=${DIR}/vars
-fi
-
 # If no valid configuation path, kill the script.
 if [ ! ${CONFIGPATH} ]; then
     ACDToolsLog error 'No valid configuration can be found. \
@@ -54,15 +19,6 @@ function ACDToolsUnmount {
         ACDToolsLog info "Unmounting ${1}"
         fusermount -u ${1}
     fi
-}
-
-# Function to unmount all mountpoints associated with ACDTools
-function ACDToolsUnmountAll {
-    ACDToolsLog info "Unmounting all ACDTools mountpoints"
-    ACDToolsUnmount ${DATADIR}
-    ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
-    ACDToolsUnmount ${MOUNTBASE}/acd-decrypted/
-    ACDToolsUnmount ${MOUNTBASE}/local-encrypted/
 }
 
 # Function to sync node cache 
