@@ -37,13 +37,28 @@ def _validate_config(
     missing_required_keys = required_keys - config.keys()
     extra_keys = config.keys() - allowed_keys
 
+    if missing_required_keys:
+        message = (
+            'Using configuration file at "{config_file_path}". '
+            'Missing the following configuration keys: {missing_keys}.'
+        ).format(
+            config_file_path=str(value),
+            missing_keys=', '.join(missing_required_keys),
+        )
+        raise click.BadParameter(message)
 
+    if extra_keys:
+        message = (
+            'Using configuration file at "{config_file_path}". '
+            'The following keys were given but are not valid: {extra_keys}.'
+        ).format(
+            config_file_path=str(value),
+            extra_keys=', '.join(extra_keys),
+        )
+        raise click.BadParameter(message)
 
+    return config
 
-
-    for key in required_keys:
-        if key not in keys
-    pass
 
 
 def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
