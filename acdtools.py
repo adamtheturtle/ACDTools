@@ -44,7 +44,7 @@ def _unmount(mountpoint: Path) -> None:
     pass
 
 
-def unmount_all():
+def unmount_all() -> None:
     message = 'Unmounting all ACDTools moundpoints'
     logger.info(message)
 
@@ -59,12 +59,12 @@ def unmount_all():
         _unmount(mountpoint)
 
 
-def upload():
+def upload() -> None:
     # TODO fill in
     pass
 
 
-def sync_nodes():
+def sync_nodes() -> None:
     """
     Sync node cache.
     """
@@ -72,17 +72,17 @@ def sync_nodes():
     pass
 
 
-def sync_deletes():
+def sync_deletes() -> None:
     # TODO fill in
     pass
 
 
-def mount():
+def mount() -> None:
     unmount_all()
     sync_nodes()
     # TODO the actual mount
 
 
-def acd_cli_mount():
+def acd_cli_mount() -> None:
     # TODO fill in
     pass
