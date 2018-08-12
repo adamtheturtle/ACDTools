@@ -1,9 +1,6 @@
 #!/bin/bash
 
 
-# TODO: Config validity
-# Functions
-
 # Unmount a mountpoint. Will not unmount if not already mounted.
 # TODO: fusermount does not exist on OS X, make compatible.
 function ACDToolsUnmount {
@@ -113,11 +110,6 @@ function ACDToolsMount {
     unionfs-fuse -o cow,allow_other \
         ${MOUNTBASE}/local-decrypted=RW:${MOUNTBASE}/acd-decrypted=RO \
         ${DATADIR}
-}
-
-# Function to print usage of ACDTools
-function ACDToolsUsage {
-    echo $"Usage: $0 {mount|unmount|upload|sync|syncdeletes|acdmount}"
 }
 
 # Reflect unionfs deleted file objects on Amazon Drive
@@ -289,16 +281,10 @@ function ACDToolsACDCLIMount {
         ACDToolsLog info "Running cloud storage mount in the foreground"
         ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
 
-        if [ "${MODE}" == 'amazon' ]; then
-            ${ACDCLI} -d mount -fg \
-                --modules="subdir,subdir=${ACDSUBDIR}" \
-                ${MOUNTBASE}/acd-encrypted/
-        elif [ "${MODE}" == 'gdrive' ]; then
-            mkdir -p ${MOUNTBASE}/chunks
-            ${PLEXDRIVE} -o allow_other,read_only -v 2 \
-                -t ${MOUNTBASE}/chunks \
-                --clear-chunk-max-size=32G ${MOUNTBASE}/acd-encrypted/
-        fi
+        mkdir -p ${MOUNTBASE}/chunks
+        ${PLEXDRIVE} -o allow_other,read_only -v 2 \
+            -t ${MOUNTBASE}/chunks \
+            --clear-chunk-max-size=32G ${MOUNTBASE}/acd-encrypted/
 
         ACDToolsLog info "Cloud storage mount exited - checking if to remount in
             a couple of seconds"
