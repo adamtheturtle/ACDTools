@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 def _validate_config(
-    ctx: click.core.Context,
-    param: Union[click.core.Option, click.core.Parameter],
-    value: Optional[Union[int, bool, str]],
+        ctx: click.core.Context,
+        param: Union[click.core.Option, click.core.Parameter],
+        value: Optional[Union[int, bool, str]],
 ) -> Dict[str, str]:
     required_keys = set([
         'data_dir',
@@ -35,19 +35,16 @@ def _validate_config(
 
     config = yaml.load(value)
 
-    keys = config.keys()
-
     missing_required_keys = required_keys - config.keys()
     extra_keys = config.keys() - allowed_keys
 
     if missing_required_keys:
-        message = (
-            'Using configuration file at "{config_file_path}". '
-            'Missing the following configuration keys: {missing_keys}.'
-        ).format(
-            config_file_path=str(value),
-            missing_keys=', '.join(missing_required_keys),
-        )
+        message = ('Using configuration file at "{config_file_path}". '
+                   'Missing the following configuration keys: {missing_keys}.'
+                   ).format(
+                       config_file_path=str(value),
+                       missing_keys=', '.join(missing_required_keys),
+                   )
         raise click.BadParameter(message)
 
     if extra_keys:
@@ -61,7 +58,6 @@ def _validate_config(
         raise click.BadParameter(message)
 
     return config
-
 
 
 def config_option(command: Callable[..., None]) -> Callable[..., None]:
@@ -80,6 +76,10 @@ def config_option(command: Callable[..., None]) -> Callable[..., None]:
     return function
 
 
+def _local_cleanup():
+    pass
+
+
 # TODO make this run on the group
 def _dependency_check(rclone_binary: Path, plexdrive_binary: Path) -> None:
     # TODO binaries from config
@@ -94,7 +94,8 @@ def _dependency_check(rclone_binary: Path, plexdrive_binary: Path) -> None:
     for dependency in dependencies:
         if shutil.which(dependency) is None:
             message = '"{dependency}" is not available on the PATH.'.format(
-                dependency=dependency, )
+                dependency=dependency,
+            )
 
             click.fail(message=message)
 
@@ -108,7 +109,8 @@ def _unmount(mountpoint: Path) -> None:
     is_mountpoint = os.path.ismount(path=str(mountpoint))
     if not is_mountpoint:
         message = 'Cannot unmount "{mountpoint}" - it is not mounted'.format(
-            mountpoint=str(mountpoint), )
+            mountpoint=str(mountpoint),
+        )
         logger.warn(message=message)
         return
 
