@@ -26,12 +26,6 @@ function ACDToolsUnmountAll {
     ACDToolsUnmount ${MOUNTBASE}/local-encrypted/
 }
 
-function ACDToolsUnsetSyncDate {
-    ACDToolsLog info "Unsetting the last sync date so we don't need to sleep"
-    sqlite3 ~/.cache/acd_cli/nodes.db \
-        "INSERT OR REPLACE INTO metadata VALUES ('last_sync', 0)" 2>/dev/null
-}
-
 # Function to mount everything for ACDTools
 function ACDToolsMount {
     # Create mountpoint directories
