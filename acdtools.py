@@ -81,7 +81,7 @@ def config_option(command: Callable[..., None]) -> Callable[..., None]:
 
 
 # TODO make this run on the group
-def _dependency_check() -> None:
+def _dependency_check(rclone_binary: Path, plexdrive_binary: Path) -> None:
     # TODO binaries from config
     dependencies = (
         rclone_binary,
