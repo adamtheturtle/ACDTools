@@ -1,5 +1,64 @@
 #!/bin/bash
 
+# ACDTools
+
+# Logging function
+function ACDToolsLog {
+    echo -n "[$(date "+%Y-%m-%d %H:%M:%S")]"
+
+    case "${1}" in
+        info)
+            echo -en " [\033[0;36mINFO \033[0m] "
+            ;;
+        error)
+            echo -en " [\033[0;31mERROR\033[0m] "
+            ;;
+        warning)
+            echo -en " [\033[0;33mWARN \033[0m] "
+            ;;
+    esac
+
+    # Strip out double spaces caused by indentation
+    LOGLINE=$(echo ${2} | sed 's/  */ /g')
+    echo ${LOGLINE}
+}
+
+
+# Set directory of current script
+# http://stackoverflow.com/a/246128/811814
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SCRIPTPATH="${DIR}/$(basename ${0})"
+
+
+# Determine configuration file path and load it
+
+# If -c is set, then set that value as ${OPTARG}
+while getopts ":c:" opt; do
+    case $opt in
+        c)
+            ACDToolsLog info "User defined configuration file at ${OPTARG}"
+            CONFOPT=${OPTARG}
+            ;;
+    esac
+done
+
+if [ ${CONFOPT} ] && [ -f ${CONFOPT} ]; then
+    # Ensure user defined configuration exists
+    CONFIGPATH=${CONFOPT}
+elif [ -f ${PWD}/vars ]; then
+    # Check if configuration exists in PWD
+    CONFIGPATH=${PWD}/vars
+elif [ -f ${DIR}/vars ]; then
+    # Check if configuration exists in the script directory
+    CONFIGPATH=${DIR}/vars
+fi
+
 # If no valid configuation path, kill the script.
 if [ ! ${CONFIGPATH} ]; then
     ACDToolsLog error 'No valid configuration can be found. \
@@ -10,6 +69,18 @@ else
     source ${CONFIGPATH}
 fi
 
+# Default mode is Amazon
+if [ -z "${MODE}" ]; then
+    MODE='amazon'
+fi
+
+# TODO: Config validity
+
+
+# Functions
+
+# Unmount a mountpoint. Will not unmount if not already mounted.
+# TODO: fusermount does not exist on OS X, make compatible.
 function ACDToolsUnmount {
     # Check if ${1} is a mountpoint (remove trailing slash)
     ISMOUNTPOINT=`mount | grep ${1%/} | wc -l`
@@ -21,19 +92,69 @@ function ACDToolsUnmount {
     fi
 }
 
-# Function to sync node cache 
-function ACDToolsSyncNodes {
-    ACDToolsLog info "Syncing acdcli node cache database"
-    ${ACDCLI} psync / | while read line; do ACDToolsLog info "${line}"; done
+# Function to unmount all mountpoints associated with ACDTools
+function ACDToolsUnmountAll {
+    ACDToolsLog info "Unmounting all ACDTools mountpoints"
+    ACDToolsUnmount ${DATADIR}
+    touch ${DIR}/unmount.acd
+    ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
+    sleep 6
+    rm -f ${DIR}/unmount.acd
+    ACDToolsUnmount ${MOUNTBASE}/acd-decrypted/
+    ACDToolsUnmount ${MOUNTBASE}/local-encrypted/
+}
 
-    if [ "$1" == "full" ]; then
-        ACDToolsLog info "Full acdcli node cache sync in progress, \
-            this may take a while"
-        ${ACDCLI} sync -f | while read line; do ACDToolsLog info "${line}"; done
-        ${ACDCLI} psync / | while read line; do ACDToolsLog info "${line}"; done
+# Function to sync node cache
+function ACDToolsSyncNodes {
+    if [ "${MODE}" == "gdrive" ]; then
+        ACDToolsLog info "Google Drive does not maintain a node cache database"
     else
-        ${ACDCLI} sync | while read line; do ACDToolsLog info "${line}"; done
+        if [ -f ~/.cache/acd_cli/nodes.db ]; then
+            ACDToolsUnsetSyncDate
+        elif [ "$1" != "full" ]; then
+            ACDToolsLog info "Nodes DB does not exist, we must force sync"
+            ACDToolsSyncNodes "full"
+        fi
+
+        ACDToolsLog info "Syncing acdcli node cache database"
+
+        if [ "$1" == "full" ]; then
+            ACDToolsLog info "Full acdcli node cache sync in progress, \
+                this may take a very long time and has multiple stages"
+            ${ACDCLI} sync -f | while read line; do ACDToolsLog info "${line}"; done
+            ACDToolsUnsetSyncDate
+            ${ACDCLI} psync / | while read line; do ACDToolsLog info "${line}"; done
+            ACDToolsUnsetSyncDate
+            ${ACDCLI} psync -r ${ACDSUBDIR} | while read line; do ACDToolsLog info "${line}"; done
+        else
+            ${ACDCLI} sync | while read line; do ACDToolsLog info "${line}"; done
+        fi
     fi
+}
+
+function ACDToolsSyncLocalNodes {
+    if [ "${MODE}" == "gdrive" ]; then
+        ACDToolsLog info "Google Drive does not maintain a node cache database"
+    else
+        # Produce upload list to sync
+        LOCALLIST=$(find ${MOUNTBASE}/local-encrypted/ | tail -n +2)
+        IFS=$'\n'
+
+        ACDToolsLog info "Syncing nodes from Amazon Drive which match the 
+            filename of local files. This may take some time."
+
+        for file in ${LOCALLIST}; do
+            NODEPATH="${ACDSUBDIR}/${file#${MOUNTBASE}/local-encrypted/}"
+            # Forward to /dev/null to avoid spam
+            ${ACDCLI} psync ${NODEPATH} > /dev/null
+        done
+    fi
+}
+
+function ACDToolsUnsetSyncDate {
+    ACDToolsLog info "Unsetting the last sync date so we don't need to sleep"
+    sqlite3 ~/.cache/acd_cli/nodes.db \
+        "INSERT OR REPLACE INTO metadata VALUES ('last_sync', 0)" 2>/dev/null
 }
 
 # Function to mount everything for ACDTools
@@ -45,20 +166,23 @@ function ACDToolsMount {
         ${MOUNTBASE}/local-encrypted/ \
         ${DATADIR} 2>/dev/null
 
-    # Ensure the ACD Subdir exists
-    ${ACDCLI} mkdir -p ${ACDSUBDIR} 2> /dev/null
+    if [ "${MODE}" == 'amazon' ]; then
+        # Ensure the ACD Subdir exists
+        ${ACDCLI} mkdir -p ${ACDSUBDIR} 2> /dev/null
+    elif [ "${MODE}" == 'gdrive' ]; then
+        MOUNTPREFIX="/${ACDSUBDIR}"
+    fi
 
-    # Mount everything
-    ACDToolsLog info "Mounting Amazon Drive"
-    screen -dm -S acd-mount ${SCRIPTPATH} acdmount
+    ACDToolsLog info "Mounting cloud storage Drive"
+    screen -dm -S acdtools-mount ${SCRIPTPATH} acdmount
 
     ACDToolsLog info "Mounting local encrypted filesystem"
     encfs --extpass="echo ${ENCFSPASS}" --reverse \
         ${MOUNTBASE}/local-decrypted/ ${MOUNTBASE}/local-encrypted/
 
-    ACDToolsLog info "Mounting Amazon decrypted filesystem"
+    ACDToolsLog info "Mounting cloud decrypted filesystem"
     encfs --extpass="echo ${ENCFSPASS}" \
-        ${MOUNTBASE}/acd-encrypted/ ${MOUNTBASE}/acd-decrypted/
+        ${MOUNTBASE}/acd-encrypted/${MOUNTPREFIX} ${MOUNTBASE}/acd-decrypted/
 
     ACDToolsLog info "Mounting UnionFS"
     unionfs-fuse -o cow,allow_other \
@@ -85,8 +209,7 @@ function ACDToolsSyncDeletes {
     fi
 
     # Set the for delimiter
-    IFS='
-    '
+    IFS=$'\n'
 
     # For every file listed by the find command
     for file in ${MATCHED}; do
@@ -98,25 +221,39 @@ function ACDToolsSyncDeletes {
         ENCNAME=$(encfsctl encode --extpass="echo ${ENCFSPASS}" \
             ${ACDMOUNT} "${FILENAME}")
 
-        if [ "${#ENCNAME}" -gt "0" ]; then
-            ACDEXIST=$(${ACDCLI} ls ${ACDSUBDIR}/${ENCNAME} > /dev/null 2>&1; \
-                echo $?)
-
+            if [ "${#ENCNAME}" -gt "0" ]; then
+            if [ "${MODE}" == "gdrive" ]; then
+                ACDEXIST=$(${RCLONE} ls --max-depth=1 \
+                    ${RCLONEREMOTE}:${ACDSUBDIR}/${ENCNAME} > /dev/null 2>&1; \
+                    echo $?)
+            else
+                ACDEXIST=$(${ACDCLI} ls ${ACDSUBDIR}/${ENCNAME} > /dev/null 2>&1; \
+                    echo $?)
+            fi
+            
             if [ "${ACDEXIST}" -eq "0" ]; then
                 # File does exist, delete it from Amazon Drive
-                ACDToolsLog info "${file#$SEARCHDIR} exists on Amazon Drive - \
+                ACDToolsLog info "${file#$SEARCHDIR} exists on cloud drive - \
                     deleting"
-                until `${ACDCLI} rm "${ACDSUBDIR}/${ENCNAME}"`
+                    
+                if [ "${MODE}" == "gdrive" ]; then
+                    DELCMD=$(${RCLONE} delete \
+                        ${RCLONEREMOTE}:"${ACDSUBDIR}/${ENCNAME}")
+                else
+                    DELCMD=$(${ACDCLI} rm "${ACDSUBDIR}/${ENCNAME}")
+                fi
+
+                until ${DELCMD}
                 do
                     # Failed delete - sleep and retry
-                    ACDToolsLog error "Delete failed, trying again in 30 \
+                    ACDToolsLog error "Delete failed, trying again in 30
                         seconds"
                     sleep 30
                 done
 
-                ACDToolsLog info "${FILENAME} deleted from Amazon Drive"
+                ACDToolsLog info "${FILENAME} deleted from cloud drive"
             else
-                ACDToolsLog info "${file#$SEARCHDIR} is not on Amazon Drive"
+                ACDToolsLog info "${file#$SEARCHDIR} is not on cloud drive"
             fi
 
             # Remove the UnionFS hidden object
@@ -136,7 +273,7 @@ function ACDToolsSyncDeletes {
     if [ -z "${FAILEDSYNCDELETES}" ]; then
         rm -rf "${SEARCHDIR}"
     else
-        ACDToolsLog warn "Not clearing .uninfs directory as there were \
+        ACDToolsLog warn "Not clearing .unionfs directory as there were \
             failures."
     fi
 }
@@ -157,42 +294,53 @@ function ACDToolsUpload {
 
     # Logic for force syncing on repeated failure
     ULATTEMPTS=0
-    
+
     # Determine the .unionfs-fuse directory name as to not upload it
     EXCLUDENAME=$(encfsctl encode --extpass="echo ${ENCFSPASS}" \
         ${MOUNTBASE}/acd-encrypted .unionfs-fuse)
     if [ "${#EXCLUDENAME}" -gt "0" ]; then
         ACDToolsLog info "Will not upload ${EXCLUDENAME} directory \
             (.unionfs-fuse)"
-        ACDEXCLUDE=" -xp ${MOUNTBASE}/local-encrypted/${EXCLUDENAME} "
+        if [ "${MODE}" == "gdrive" ]; then
+            ACDEXCLUDE=" --exclude /${EXCLUDENAME}/* "
+            ULCMD=$(${RCLONE} -v copy ${ACDEXCLUDE} \
+                ${MOUNTBASE}/local-encrypted/ \
+                ${RCLONEREMOTE}:${ACDSUBDIR})
+        else
+            ACDEXCLUDE=" -xp ${MOUNTBASE}/local-encrypted/${EXCLUDENAME} "
+            ULCMD=$(${ACDCLI} upload -o ${ACDEXCLUDE} \
+                ${MOUNTBASE}/local-encrypted/* \
+                ${ACDSUBDIR})
+        fi
     fi
 
-    # Upload to Amazon Drive
-	# Redirect error to `/dev/null` so as not to pollute the output with an
-	# `Input/output error`.
-	if [ "$(ls -A ${MOUNTBASE}/local-encrypted/* 2> /dev/null)" ] ; then
-	    until ${ACDCLI} upload -o ${ACDEXCLUDE} ${MOUNTBASE}/local-encrypted/* \
-	        ${ACDSUBDIR}
-	    do
-	        ULATTEMPTS=$((ULATTEMPTS+1))
-	        ACDToolsLog error "Some uploads failed - uploading again after a sync \
-	            (attempt ${ULATTEMPTS})"
+    # Upload to Cloud Drive
+    # Redirect error to `/dev/null` so as not to pollute the output with an
+    # `Input/output error`.
+    if [ "$(ls -A ${MOUNTBASE}/local-encrypted/* 2> /dev/null)" ] ; then
+        until ${ULCMD}
+        do
+            ULATTEMPTS=$((ULATTEMPTS+1))
+            ACDToolsLog error "Some uploads failed - uploading again after a
+                sync (attempt ${ULATTEMPTS})"
 
-	        if [ "${ULATTEMPTS}" -ge 3 ]; then
-	            ACDToolsLog error "Uploads failed 3 (or more) times - Forcing full \
-	                sync"
-	            ACDToolsSyncNodes full
-	        else
-	            ACDToolsSyncNodes
-	        fi
-	        sleep 60
-	    done
-	else
-		ACDToolsLog info "${MOUNTBASE}/local-encrypted/* is empty - nothing to upload"
-	fi
+            if [ "${ULATTEMPTS}" -ge 5 ]; then
+                ACDToolsLog error "Upload failed 5 times - giving up"
+                exit 1
+            else
+                ACDToolsSyncNodes
+                ACDToolsSyncLocalNodes
+            fi
+            sleep 60
+        done
+    else
+        ACDToolsLog info "${MOUNTBASE}/local-encrypted/* is empty - nothing to 
+            upload"
+    fi
 
     ACDToolsLog info "Upload Complete - Syncing changes"
     ACDToolsSyncNodes
+    ACDToolsSyncLocalNodes
 
     # Delete local files older than ${LOCALDAYS}
     ACDToolsLocalCleanup
@@ -206,22 +354,123 @@ function ACDToolsLocalCleanup {
     ACDToolsLog info "Deleting local files older than ${LOCALDAYS} days"
 
     find ${MOUNTBASE}/local-decrypted/ -type f \
-        -mtime +${LOCALDAYS} -exec rm -rf {} \;
+        -ctime +${LOCALDAYS} -exec rm -rf {} \;
 }
 
-# Foreground acdcli mount which will catch non-zero exits
+# Foreground acdcli mount which will keep remounting until unmount file exists
 function ACDToolsACDCLIMount {
-    ACDToolsLog info "Running acd_cli in the foreground"
-    ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
-
-    until ${ACDCLI} -d mount -fg \
-        --modules="subdir,subdir=${ACDSUBDIR}" ${MOUNTBASE}/acd-encrypted/
+    while [ ! -f ${DIR}/unmount.acd ]
     do
-        ACDToolsLog error "The acdcli mount exited with a non-zero exitcode, \
-            remounting"
+        ACDToolsLog info "Running cloud storage mount in the foreground"
         ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
-        sleep 5
+
+        if [ "${MODE}" == 'amazon' ]; then
+            ${ACDCLI} -d mount -fg \
+                --modules="subdir,subdir=${ACDSUBDIR}" \
+                ${MOUNTBASE}/acd-encrypted/
+        elif [ "${MODE}" == 'gdrive' ]; then
+            mkdir -p ${MOUNTBASE}/chunks
+            ${PLEXDRIVE} -o allow_other,read_only -v 2 \
+                -t ${MOUNTBASE}/chunks \
+                --clear-chunk-max-size=32G ${MOUNTBASE}/acd-encrypted/
+        fi
+
+        ACDToolsLog info "Cloud storage mount exited - checking if to remount in
+            a couple of seconds"
+        sleep 2
     done
 
-    ACDToolsLog info "The acdcli mount exited with a zero exit code"
+    ACDToolsLog info "The acdcli mount exited cleanly"
+    rm -f ${DIR}/unmount.acd
 }
+
+# Check for dependencies
+function ACDToolsDependencyCheck {
+    if [ "${MODE}" == "gdrive" ]; then
+        # rclone
+        TEST=`which ${RCLONE} > /dev/null 2>&1; echo $?`
+        if [ "${TEST}" -ne "0" ]; then
+            FAILURE="${FAILURE} rclone"
+        fi
+
+        # plexdrive
+        TEST=`which ${PLEXDRIVE} > /dev/null 2>&1; echo $?`
+        if [ "${TEST}" -ne "0" ]; then
+            FAILURE="${FAILURE} plexdrive"
+        fi
+    else
+        # acd_cli
+        TEST=`which ${ACDCLI} > /dev/null 2>&1; echo $?`
+        if [ "${TEST}" -ne "0" ]; then
+            FAILURE=" acd_cli"
+        fi
+
+        # sqlite3
+        TEST=`which sqlite3 > /dev/null 2>&1; echo $?`
+        if [ "${TEST}" -ne "0" ]; then
+            FAILURE="${FAILURE} sqlite3"
+        fi
+    fi
+
+    # unionfs
+    TEST=`which unionfs-fuse > /dev/null 2>&1; echo $?`
+    if [ "${TEST}" -ne "0" ]; then
+        FAILURE="${FAILURE} unionfs-fuse"
+    fi
+
+    # encfs
+    TEST=`which encfs > /dev/null 2>&1; echo $?`
+    if [ "${TEST}" -ne "0" ]; then
+        FAILURE="${FAILURE} encfs"
+    fi
+
+    # screen
+    TEST=`which screen > /dev/null 2>&1; echo $?`
+    if [ "${TEST}" -ne "0" ]; then
+        FAILURE="${FAILURE} screen"
+    fi
+
+    if [ ! -z "${FAILURE}" ]; then
+        ACDToolsLog error "ACDTools is missing the following \
+            dependencies:${FAILURE}"
+        exit 1
+    fi
+}
+
+
+# Ensure dependencies exist before proceeding
+ACDToolsDependencyCheck
+
+# Determine what the user wants to do
+ACTION=${*: -1:1} # TODO: This takes the last arg, doubt it is reliable.
+
+case "${ACTION}" in
+    mount)
+        ACDToolsUnmountAll
+        ACDToolsSyncNodes
+        ACDToolsMount
+        ;;
+    unmount)
+        ACDToolsUnmountAll
+        ;;
+    upload)
+        ACDToolsUpload
+        ;;
+    sync)
+        ACDToolsSyncNodes
+        # TODO: Work out how to pass a full option to this
+        ;;
+    syncdeletes)
+        ACDToolsSyncDeletes
+        ;;
+    usage)
+        ACDToolsUsage
+        ;;
+    acdmount)
+        ACDToolsACDCLIMount
+        ;;
+    *)
+        ACDToolsLog error "Unknown command: ${ACTION}"
+        ACDToolsUsage
+        exit 1
+esac
