@@ -19,9 +19,10 @@ def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
 
 # TODO make this run on the group
 def _dependency_check() -> None:
-    # TODO binary from ACDCLI binary config
+    # TODO binaries from config
     dependencies = (
-        acd_cli_binary,
+        rclone_binary,
+        plexdrive_binary,
         'unionfs-fuse',
         'encfs',
         'screen',

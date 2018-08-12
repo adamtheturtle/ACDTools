@@ -1,41 +1,5 @@
 #!/bin/bash
 
-# ACDTools
-
-# Logging function
-function ACDToolsLog {
-    echo -n "[$(date "+%Y-%m-%d %H:%M:%S")]"
-
-    case "${1}" in
-        info)
-            echo -en " [\033[0;36mINFO \033[0m] "
-            ;;
-        error)
-            echo -en " [\033[0;31mERROR\033[0m] "
-            ;;
-        warning)
-            echo -en " [\033[0;33mWARN \033[0m] "
-            ;;
-    esac
-
-    # Strip out double spaces caused by indentation
-    LOGLINE=$(echo ${2} | sed 's/  */ /g')
-    echo ${LOGLINE}
-}
-
-
-# Set directory of current script
-# http://stackoverflow.com/a/246128/811814
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-SCRIPTPATH="${DIR}/$(basename ${0})"
-
-
 # Determine configuration file path and load it
 
 # If -c is set, then set that value as ${OPTARG}
@@ -69,14 +33,7 @@ else
     source ${CONFIGPATH}
 fi
 
-# Default mode is Amazon
-if [ -z "${MODE}" ]; then
-    MODE='amazon'
-fi
-
 # TODO: Config validity
-
-
 # Functions
 
 # Unmount a mountpoint. Will not unmount if not already mounted.
@@ -382,59 +339,6 @@ function ACDToolsACDCLIMount {
 
     ACDToolsLog info "The acdcli mount exited cleanly"
     rm -f ${DIR}/unmount.acd
-}
-
-# Check for dependencies
-function ACDToolsDependencyCheck {
-    if [ "${MODE}" == "gdrive" ]; then
-        # rclone
-        TEST=`which ${RCLONE} > /dev/null 2>&1; echo $?`
-        if [ "${TEST}" -ne "0" ]; then
-            FAILURE="${FAILURE} rclone"
-        fi
-
-        # plexdrive
-        TEST=`which ${PLEXDRIVE} > /dev/null 2>&1; echo $?`
-        if [ "${TEST}" -ne "0" ]; then
-            FAILURE="${FAILURE} plexdrive"
-        fi
-    else
-        # acd_cli
-        TEST=`which ${ACDCLI} > /dev/null 2>&1; echo $?`
-        if [ "${TEST}" -ne "0" ]; then
-            FAILURE=" acd_cli"
-        fi
-
-        # sqlite3
-        TEST=`which sqlite3 > /dev/null 2>&1; echo $?`
-        if [ "${TEST}" -ne "0" ]; then
-            FAILURE="${FAILURE} sqlite3"
-        fi
-    fi
-
-    # unionfs
-    TEST=`which unionfs-fuse > /dev/null 2>&1; echo $?`
-    if [ "${TEST}" -ne "0" ]; then
-        FAILURE="${FAILURE} unionfs-fuse"
-    fi
-
-    # encfs
-    TEST=`which encfs > /dev/null 2>&1; echo $?`
-    if [ "${TEST}" -ne "0" ]; then
-        FAILURE="${FAILURE} encfs"
-    fi
-
-    # screen
-    TEST=`which screen > /dev/null 2>&1; echo $?`
-    if [ "${TEST}" -ne "0" ]; then
-        FAILURE="${FAILURE} screen"
-    fi
-
-    if [ ! -z "${FAILURE}" ]; then
-        ACDToolsLog error "ACDTools is missing the following \
-            dependencies:${FAILURE}"
-        exit 1
-    fi
 }
 
 
