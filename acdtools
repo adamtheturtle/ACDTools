@@ -26,34 +26,6 @@ function ACDToolsUnmountAll {
     ACDToolsUnmount ${MOUNTBASE}/local-encrypted/
 }
 
-# Function to sync node cache
-function ACDToolsSyncNodes {
-    if [ "${MODE}" == "gdrive" ]; then
-        ACDToolsLog info "Google Drive does not maintain a node cache database"
-    else
-        if [ -f ~/.cache/acd_cli/nodes.db ]; then
-            ACDToolsUnsetSyncDate
-        elif [ "$1" != "full" ]; then
-            ACDToolsLog info "Nodes DB does not exist, we must force sync"
-            ACDToolsSyncNodes "full"
-        fi
-
-        ACDToolsLog info "Syncing acdcli node cache database"
-
-        if [ "$1" == "full" ]; then
-            ACDToolsLog info "Full acdcli node cache sync in progress, \
-                this may take a very long time and has multiple stages"
-            ${ACDCLI} sync -f | while read line; do ACDToolsLog info "${line}"; done
-            ACDToolsUnsetSyncDate
-            ${ACDCLI} psync / | while read line; do ACDToolsLog info "${line}"; done
-            ACDToolsUnsetSyncDate
-            ${ACDCLI} psync -r ${ACDSUBDIR} | while read line; do ACDToolsLog info "${line}"; done
-        else
-            ${ACDCLI} sync | while read line; do ACDToolsLog info "${line}"; done
-        fi
-    fi
-}
-
 function ACDToolsUnsetSyncDate {
     ACDToolsLog info "Unsetting the last sync date so we don't need to sleep"
     sqlite3 ~/.cache/acd_cli/nodes.db \
@@ -163,9 +135,6 @@ function ACDToolsSyncDeletes {
 
     done
 
-    # Sync Amazon Drive changes
-    ACDToolsSyncNodes
-
     # Delete the searchdir so that it is not uploaded as an empty directories
     # There's still a chance this can happen with the fix for #27
     if [ -z "${FAILEDSYNCDELETES}" ]; then
@@ -225,9 +194,6 @@ function ACDToolsUpload {
             if [ "${ULATTEMPTS}" -ge 5 ]; then
                 ACDToolsLog error "Upload failed 5 times - giving up"
                 exit 1
-            else
-                ACDToolsSyncNodes
-            fi
             sleep 60
         done
     else
@@ -236,7 +202,6 @@ function ACDToolsUpload {
     fi
 
     ACDToolsLog info "Upload Complete - Syncing changes"
-    ACDToolsSyncNodes
 
     # Delete local files older than ${LOCALDAYS}
     ACDToolsLocalCleanup
