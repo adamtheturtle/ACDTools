@@ -45,13 +45,6 @@ else
     source ${CONFIGPATH}
 fi
 
-# TODO: Config validity
-
-
-# Functions
-
-# Unmount a mountpoint. Will not unmount if not already mounted.
-# TODO: fusermount does not exist on OS X, make compatible.
 function ACDToolsUnmount {
     # Check if ${1} is a mountpoint (remove trailing slash)
     ISMOUNTPOINT=`mount | grep ${1%/} | wc -l`

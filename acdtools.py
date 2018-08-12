@@ -5,6 +5,8 @@ logger = logging.getLogger(__name__)
 
 # TODO make public functions click commands
 
+# TODO common click option -c, --config-path
+
 
 # TODO make this run on the group
 def _dependency_check():
@@ -12,6 +14,10 @@ def _dependency_check():
     pass
 
 def _unmount(mountpoint: Path):
+    """
+    Unmount a mountpoint. Will not unmount if not already mounted.
+    """
+    # TODO: fusermount does not exist on OS X, make compatible.
     # TODO fill in
     pass
 
