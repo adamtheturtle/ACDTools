@@ -1,27 +1,5 @@
 #!/bin/bash
 
-# ACDTools
-
-# Logging function
-function ACDToolsLog {
-    echo -n "[$(date "+%Y-%m-%d %H:%M:%S")]"
-
-    case "${1}" in
-        info)
-            echo -en " [\033[0;36mINFO \033[0m] "
-            ;;
-        error)
-            echo -en " [\033[0;31mERROR\033[0m] "
-            ;;
-        warning)
-            echo -en " [\033[0;33mWARN \033[0m] "
-            ;;
-    esac
-
-    echo ${2}
-}
-
-
 # Set directory of current script
 # http://stackoverflow.com/a/246128/811814
 SOURCE="${BASH_SOURCE[0]}"
@@ -331,41 +309,3 @@ function ACDToolsDependencyCheck {
         exit 1
     fi
 }
-
-
-# Ensure dependencies exist before proceeding
-ACDToolsDependencyCheck
-
-# Determine what the user wants to do
-ACTION=${*: -1:1} # TODO: This takes the last arg, doubt it is reliable.
-
-case "${ACTION}" in
-    mount)
-        ACDToolsUnmountAll
-        ACDToolsSyncNodes
-        ACDToolsMount
-        ;;
-    unmount)
-        ACDToolsUnmountAll
-        ;;
-    upload)
-        ACDToolsUpload
-        ;;
-    sync)
-        ACDToolsSyncNodes
-        # TODO: Work out how to pass a full option to this
-        ;;
-    syncdeletes)
-        ACDToolsSyncDeletes
-        ;;
-    usage)
-        ACDToolsUsage
-        ;;
-    acdmount)
-        ACDToolsACDCLIMount
-        ;;
-    *)
-        ACDToolsLog error "Unknown command: ${ACTION}"
-        ACDToolsUsage
-        exit 1
-esac
