@@ -37,6 +37,10 @@ def unmount_all():
         _unmount(mountpoint)
 
 
+def upload():
+    # TODO fill in
+    pass
+
 def sync_nodes():
     """
     Sync node cache.
