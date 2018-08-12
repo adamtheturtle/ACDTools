@@ -2,14 +2,48 @@ import logging
 import os
 import shutil
 import subprocess
+import yaml
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Dict, Optional, Union
 
 import click
 
 logger = logging.getLogger(__name__)
 
 # TODO make public functions click commands
+
+
+def _validate_config(
+    ctx: click.core.Context,
+    param: Union[click.core.Option, click.core.Parameter],
+    value: Optional[Union[int, bool, str]],
+) -> Dict[str, str]:
+    required_keys = set([
+        'mount_base',
+        'data_dir',
+        'encfs_pass',
+        'path_on_cloud_drive',
+        'days_to_keep_local',
+        'encfs6_config',
+    ])
+    optional_keys = set(['http_proxy', 'https_proxy'])
+
+    allowed_keys = required_keys + optional_keys
+
+    config = yaml.load(value)
+
+    keys = config.keys()
+
+    missing_required_keys = required_keys - config.keys()
+    extra_keys = config.keys() - allowed_keys
+
+
+
+
+
+    for key in required_keys:
+        if key not in keys
+    pass
 
 
 def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
@@ -34,8 +68,7 @@ def _dependency_check() -> None:
     for dependency in dependencies:
         if shutil.which(dependency) is None:
             message = '"{dependency}" is not available on the PATH.'.format(
-                dependency=dependency,
-            )
+                dependency=dependency, )
 
             click.fail(message=message)
 
@@ -49,8 +82,7 @@ def _unmount(mountpoint: Path) -> None:
     is_mountpoint = os.path.ismount(path=str(mountpoint))
     if not is_mountpoint:
         message = 'Cannot unmount "{mountpoint}" - it is not mounted'.format(
-            mountpoint=str(mountpoint),
-        )
+            mountpoint=str(mountpoint), )
         logger.warn(message=message)
         return
 
@@ -60,7 +92,8 @@ def _unmount(mountpoint: Path) -> None:
     subprocess.run(args=unmount_args, check=True)
 
 
-def unmount_all() -> None:
+@config_path_option
+def unmount_all(config: Dict[str, str]) -> None:
     message = 'Unmounting all ACDTools moundpoints'
     logger.info(message)
 
@@ -91,6 +124,7 @@ def sync_nodes() -> None:
 def sync_deletes() -> None:
     # TODO fill in
     pass
+
 
 def _mount() -> None:
     # TODO fill in
