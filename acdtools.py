@@ -38,6 +38,9 @@ def unmount_all():
 
 
 def sync_nodes():
+    """
+    Sync node cache.
+    """
     # TODO fill in
     pass
 
