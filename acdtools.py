@@ -19,7 +19,7 @@ def config_path_option(command: Callable[..., None]) -> Callable[..., None]:
 
 # TODO make this run on the group
 def _dependency_check() -> None:
-    # TODO fill in
+    # TODO binary from ACDCLI binary config
     dependencies = (
         acd_cli_binary,
         'unionfs-fuse',
