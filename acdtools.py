@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Callable
 
@@ -45,8 +46,18 @@ def _unmount(mountpoint: Path) -> None:
 
     This does not work on macOS as ``fusermount`` does not exist.
     """
-    # TODO fill in
-    pass
+    is_mountpoint = os.path.ismount(path=str(mountpoint))
+    if not is_mountpoint:
+        message = 'Cannot unmount "{mountpoint}" - it is not mounted'.format(
+            mountpoint=str(mountpoint),
+        )
+        logger.warn(message=message)
+        return
+
+    message = 'Unmounting "{mountpoint}"'.format(mountpoint=str(mountpoint))
+    logger.info(message=message)
+    unmount_args = ['fusermount', '-u', str(mountpoint)]
+    subprocess.run(args=unmount_args, check=True)
 
 
 def unmount_all() -> None:
