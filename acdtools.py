@@ -21,6 +21,7 @@ def _dependency_check():
     # TODO fill in
     pass
 
+
 def _unmount(mountpoint: Path):
     """
     Unmount a mountpoint. Will not unmount if not already mounted.
@@ -28,6 +29,7 @@ def _unmount(mountpoint: Path):
     # TODO: fusermount does not exist on OS X, make compatible.
     # TODO fill in
     pass
+
 
 def unmount_all():
     message = 'Unmounting all ACDTools moundpoints'
@@ -48,6 +50,7 @@ def upload():
     # TODO fill in
     pass
 
+
 def sync_nodes():
     """
     Sync node cache.
@@ -55,14 +58,17 @@ def sync_nodes():
     # TODO fill in
     pass
 
+
 def sync_deletes():
     # TODO fill in
     pass
+
 
 def mount():
     unmount_all()
     sync_nodes()
     # TODO the actual mount
+
 
 def acd_cli_mount():
     # TODO fill in
