@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 from pathlib import Path
 from typing import Callable
@@ -26,6 +27,7 @@ def _dependency_check() -> None:
         plexdrive_binary,
         'unionfs-fuse',
         'encfs',
+        'fusermount',
         'screen',
     )
     for dependency in dependencies:
@@ -40,8 +42,9 @@ def _dependency_check() -> None:
 def _unmount(mountpoint: Path) -> None:
     """
     Unmount a mountpoint. Will not unmount if not already mounted.
+
+    This does not work on macOS as ``fusermount`` does not exist.
     """
-    # TODO: fusermount does not exist on OS X, make compatible.
     # TODO fill in
     pass
 
