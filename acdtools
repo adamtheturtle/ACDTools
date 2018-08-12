@@ -344,37 +344,3 @@ function ACDToolsACDCLIMount {
 
 # Ensure dependencies exist before proceeding
 ACDToolsDependencyCheck
-
-# Determine what the user wants to do
-ACTION=${*: -1:1} # TODO: This takes the last arg, doubt it is reliable.
-
-case "${ACTION}" in
-    mount)
-        ACDToolsUnmountAll
-        ACDToolsSyncNodes
-        ACDToolsMount
-        ;;
-    unmount)
-        ACDToolsUnmountAll
-        ;;
-    upload)
-        ACDToolsUpload
-        ;;
-    sync)
-        ACDToolsSyncNodes
-        # TODO: Work out how to pass a full option to this
-        ;;
-    syncdeletes)
-        ACDToolsSyncDeletes
-        ;;
-    usage)
-        ACDToolsUsage
-        ;;
-    acdmount)
-        ACDToolsACDCLIMount
-        ;;
-    *)
-        ACDToolsLog error "Unknown command: ${ACTION}"
-        ACDToolsUsage
-        exit 1
-esac

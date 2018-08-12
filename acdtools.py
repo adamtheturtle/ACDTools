@@ -49,15 +49,15 @@ def unmount_all() -> None:
     message = 'Unmounting all ACDTools moundpoints'
     logger.info(message)
 
-    mountpoints = (
-        data_dir,
-        mountbase / 'acd-encrypted',
-        mountbase / 'acd-decrypted',
-        mountbase / 'local-encrypted',
-    )
-
-    for mountpoint in mountpoints:
-        _unmount(mountpoint)
+    # mountpoints = (
+    #     data_dir,
+    #     mountbase / 'acd-encrypted',
+    #     mountbase / 'acd-decrypted',
+    #     mountbase / 'local-encrypted',
+    # )
+    #
+    # for mountpoint in mountpoints:
+    #     _unmount(mountpoint)
 
 
 def upload() -> None:
