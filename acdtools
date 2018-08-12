@@ -54,25 +54,6 @@ function ACDToolsSyncNodes {
     fi
 }
 
-function ACDToolsSyncLocalNodes {
-    if [ "${MODE}" == "gdrive" ]; then
-        ACDToolsLog info "Google Drive does not maintain a node cache database"
-    else
-        # Produce upload list to sync
-        LOCALLIST=$(find ${MOUNTBASE}/local-encrypted/ | tail -n +2)
-        IFS=$'\n'
-
-        ACDToolsLog info "Syncing nodes from Amazon Drive which match the 
-            filename of local files. This may take some time."
-
-        for file in ${LOCALLIST}; do
-            NODEPATH="${ACDSUBDIR}/${file#${MOUNTBASE}/local-encrypted/}"
-            # Forward to /dev/null to avoid spam
-            ${ACDCLI} psync ${NODEPATH} > /dev/null
-        done
-    fi
-}
-
 function ACDToolsUnsetSyncDate {
     ACDToolsLog info "Unsetting the last sync date so we don't need to sleep"
     sqlite3 ~/.cache/acd_cli/nodes.db \
@@ -246,7 +227,6 @@ function ACDToolsUpload {
                 exit 1
             else
                 ACDToolsSyncNodes
-                ACDToolsSyncLocalNodes
             fi
             sleep 60
         done
@@ -257,7 +237,6 @@ function ACDToolsUpload {
 
     ACDToolsLog info "Upload Complete - Syncing changes"
     ACDToolsSyncNodes
-    ACDToolsSyncLocalNodes
 
     # Delete local files older than ${LOCALDAYS}
     ACDToolsLocalCleanup
