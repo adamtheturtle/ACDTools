@@ -1,16 +1,5 @@
 #!/bin/bash
 
-function ACDToolsUnmountAll {
-    ACDToolsLog info "Unmounting all ACDTools mountpoints"
-    ACDToolsUnmount ${DATADIR}
-    touch ${DIR}/unmount.acd
-    ACDToolsUnmount ${MOUNTBASE}/acd-encrypted/
-    sleep 6
-    rm -f ${DIR}/unmount.acd
-    ACDToolsUnmount ${MOUNTBASE}/acd-decrypted/
-    ACDToolsUnmount ${MOUNTBASE}/local-encrypted/
-}
-
 # Function to mount everything for ACDTools
 function ACDToolsMount {
     # Create mountpoint directories
