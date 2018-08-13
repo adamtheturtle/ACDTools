@@ -127,8 +127,14 @@ def unmount_all(config: Dict[str, str]) -> None:
 
     data_dir = Path(config['data_dir'])
     mount_base = Path(config['mount_base'])
-
+    remote_encrypted = mount_base / 'acd-encrypted'
+    remote_decrypted = mount_base / 'acd-decrypted'
+    local_encrypted = mount_base / 'local-encrypted'
     unmount_lock_file = Path(__file__) / 'unmount.acd'
+
+    _unmount(mountpoint=data_dir)
+    unmount_lock_file.touch()
+    _unmount(mountpoint=remote_encrypted)
 
     # mountpoints = (
     #     data_dir,
