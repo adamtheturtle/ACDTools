@@ -77,8 +77,34 @@ def config_option(command: Callable[..., None]) -> Callable[..., None]:
     return function
 
 
-def _local_cleanup():
-    pass
+def _local_cleanup() -> None:
+    """
+    Delete local data older than "days_to_keep_local" from the configuration
+    file.
+    """
+    days_to_keep_local = float(config['days_to_keep_local'])
+    mount_base = Path(config['mount_base'])
+    local_decrypted = mount_base / 'local-decrypted'
+
+    message = (
+        'Deleting local files older than "{days_to_keep_local}" days old'
+    ).format(
+        days_to_keep_local=days_to_keep_local,
+    )
+
+    logger.info(message)
+
+    seconds_to_keep_local = days_to_keep_local * 24 * 60 * 60
+
+    file_paths = local_decrypted.rglob('*')
+
+    now_timestamp = datetime.datetime.now().timestamp()
+    oldest_acceptable_time = now_timestamp - seconds_to_keep_local
+
+    for path in file_paths:
+        ctime = path.stat().st_ctime
+        if path.is_file() and ctime < oldest_acceptable_time:
+            path.unlink()
 
 
 # TODO make this run on the group

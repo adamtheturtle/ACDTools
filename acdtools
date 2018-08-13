@@ -156,14 +156,6 @@ function ACDToolsUpload {
     rm -rf ${DIR}/upload.pid
 }
 
-# Delete local data older than ${LOCALDAYS}
-function ACDToolsLocalCleanup {
-    ACDToolsLog info "Deleting local files older than ${LOCALDAYS} days"
-
-    find ${MOUNTBASE}/local-decrypted/ -type f \
-        -ctime +${LOCALDAYS} -exec rm -rf {} \;
-}
-
 # Foreground acdcli mount which will keep remounting until unmount file exists
 function ACDToolsACDCLIMount {
     while [ ! -f ${DIR}/unmount.acd ]
