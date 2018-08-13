@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
+import time
 import yaml
 from pathlib import Path
 from typing import Callable, Dict, Optional, Union
@@ -122,7 +123,10 @@ def _unmount(mountpoint: Path) -> None:
 
 @config_option
 def unmount_all(config: Dict[str, str]) -> None:
-    message = 'Unmounting all ACDTools moundpoints'
+    """
+    Unmount all mountpoints associated with ACDTools.
+    """
+    message = 'Unmounting all ACDTools mountpoints'
     logger.info(message)
 
     data_dir = Path(config['data_dir'])
@@ -135,17 +139,10 @@ def unmount_all(config: Dict[str, str]) -> None:
     _unmount(mountpoint=data_dir)
     unmount_lock_file.touch()
     _unmount(mountpoint=remote_encrypted)
-
-    # mountpoints = (
-    #     data_dir,
-    #     mountbase / 'acd-encrypted',
-    #     mountbase / 'acd-decrypted',
-    #     mountbase / 'local-encrypted',
-    # )
-    #
-    # for mountpoint in mountpoints:
-    #     _unmount(mountpoint)
-    # TODO fill in
+    time.sleep(6)
+    unmount_lock_file.unlink()
+    _unmount(mountpoint=remote_decrypted)
+    _unmount(mountpoint=local_encrypted)
 
 
 def upload() -> None:

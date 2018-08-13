@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Function to unmount all mountpoints associated with ACDTools
 function ACDToolsUnmountAll {
     ACDToolsLog info "Unmounting all ACDTools mountpoints"
     ACDToolsUnmount ${DATADIR}
