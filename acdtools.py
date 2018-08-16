@@ -247,7 +247,7 @@ def _mount(config: Dict[str, str]) -> None:
         'cow,allow_other',
         '{local_decrypted}=RW:{remote_decrypted}=RO'.format(
             local_decrypted=str(local_decrypted),
-            decrypted_decrypted=str(decrypted_decrypted),
+            remote_decrypted=str(remote_decrypted),
         ),
         data_dir,
     ]
