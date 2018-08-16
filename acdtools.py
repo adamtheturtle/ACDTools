@@ -197,7 +197,10 @@ def sync_deletes() -> None:
         logger.info(message)
         return
 
-    matched = '...'
+    hidden_flag = '_HIDDEN~'
+    matched_files = search_dir.rglob(pattern='*' + hidden_flag)
+    for matched_file in matched_files:
+        pass
 
 
 def _mount(config: Dict[str, str]) -> None:
