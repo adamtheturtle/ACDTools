@@ -187,7 +187,17 @@ def sync_nodes() -> None:
 
 def sync_deletes() -> None:
     # TODO fill in
-    pass
+    mount_base = Path(config['mount_base'])
+    remote_encrypted = mount_base / 'acd-encrypted'
+    local_decrypted = mount_base / 'local-decrypted'
+    search_dir = local_decrypted / '.unionfs-fuse'
+
+    if not (search_dir.exists() and search_dir.is_dir()):
+        message = 'No .unionfs-fuse/ directory found, no to delete'
+        logger.info(message)
+        return
+
+    matched = '...'
 
 
 def _mount(config: Dict[str, str]) -> None:
