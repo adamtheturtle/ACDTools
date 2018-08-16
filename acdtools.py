@@ -207,9 +207,20 @@ def _mount() -> None:
 
     message = 'Mounting cloud storage drive'
     logger.info(message)
+    # In the original script this is in a ``screen``.
+    # Why?
+    acd_cli_mount()
 
     message = 'Mounting local encrypted filesystem'
     logger.info(message)
+    encfs_args = [
+        'encfs',
+        '--extpass',
+        'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
+        str(remote_mount),
+        str(local_encrypted),
+    ]
+    subprocess.run(args=encfs_args, check=True)
 
     message = 'Mounting cloud decrypted filesystem'
     logger.info(message)
