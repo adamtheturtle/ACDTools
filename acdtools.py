@@ -328,7 +328,6 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
         message = 'Running cloud storage mount in the foreground'
         logger.info(message)
         _unmount(mountpoint=remote_encrypted)
-        # TODO these args, and run these
         plexdrive_args = [
             plexdrive_binary,
             '-o',
