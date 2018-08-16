@@ -215,7 +215,19 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
         logger.info(message)
         _unmount(mountpoint=remote_encrypted)
         # TODO these args, and run these
-        plexdrive_args = []
+        plexdrive_args = [
+            plexdrive_binary,
+            '-o',
+            'allow-other,read_only',
+            '-v',
+            '2',
+            '-t',
+            str(chunks_dir),
+            '--clear-chunk-max-size=32G',
+            str(remote_encrypted),
+        ]
+
+        subprocess.run(args=plexdrive_args, check=True)
 
         message = (
             'Cloud storage mount exited - checking if to remount in a couple '
@@ -226,6 +238,3 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
 
     message = 'The acdcli mount exited cleanly'
     unmount_lock_file.unlink()
-
-
-        # TODO fill in
