@@ -181,14 +181,6 @@ def upload(config: Dict[str, str]) -> None:
     upload_pid_file.unlink()
 
 
-def sync_nodes() -> None:
-    """
-    Sync node cache.
-    """
-    # TODO fill in
-    pass
-
-
 @config_option
 def sync_deletes(config: Dict[str, str]) -> None:
     # TODO fill in
@@ -229,21 +221,39 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
         encname = encfsctl_result.stdout
 
-        if encname:
-            # TODO got here
-            rclone_args = [
-                str(rclone_binary),
-                'ls',
-                '--max-depth',
-                '1',
-                '{rclone_remote}:{path_on_cloud_drive}/{encname}'.format(
-                    rclone_remote=rclone_remote,
-                    path_on_cloud_drive=path_on_cloud_drive,
-                    encname=encname,
-                ),
-            ]
-            pass
-            # returncode
+        if not encname:
+            message = 'Empty name returned from encfsctl - skipping.'
+            logger.error(message)
+            # Delete the search directory so that it is not uploaded as an
+            # empty directory.
+            search_dir.unlink()
+
+        rclone_path = '{rclone_remote}:{path_on_cloud_drive}/{encname}'.format(
+            rclone_remote=rclone_remote,
+            path_on_cloud_drive=path_on_cloud_drive,
+            encname=encname,
+        )
+
+        rclone_args = [
+            str(rclone_binary),
+            'ls',
+            '--max-depth',
+            '1',
+            rclone_path,
+        ]
+        rclone_output = subprocess.run(args=rclone_args)
+        rclone_status_code = rclone_output.returncode
+        if rclone_status_code == 0:
+            message = '{matched_file} exists on cloud drive - deleting'.format(
+                matched_file=str(matched_file),
+            )
+
+        # TODO got here
+        rclone_delete_args = [
+            str(rclone_binary),
+            'delete',
+            rclone_path,
+        ]
 
 
 def _mount(config: Dict[str, str]) -> None:
@@ -312,7 +322,6 @@ def _mount(config: Dict[str, str]) -> None:
 
 def mount() -> None:
     unmount_all()
-    sync_nodes()
     _mount()
 
 
