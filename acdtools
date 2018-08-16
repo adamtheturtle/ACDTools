@@ -1,33 +1,5 @@
 #!/bin/bash
 
-# Function to mount everything for ACDTools
-function ACDToolsMount {
-    # Create mountpoint directories
-    mkdir -p ${MOUNTBASE}/acd-encrypted/ \
-        ${MOUNTBASE}/acd-decrypted/ \
-        ${MOUNTBASE}/local-decrypted/ \
-        ${MOUNTBASE}/local-encrypted/ \
-        ${DATADIR} 2>/dev/null
-
-    MOUNTPREFIX="/${ACDSUBDIR}"
-
-    ACDToolsLog info "Mounting cloud storage Drive"
-    screen -dm -S acdtools-mount ${SCRIPTPATH} acdmount
-
-    ACDToolsLog info "Mounting local encrypted filesystem"
-    encfs --extpass="echo ${ENCFSPASS}" --reverse \
-        ${MOUNTBASE}/local-decrypted/ ${MOUNTBASE}/local-encrypted/
-
-    ACDToolsLog info "Mounting cloud decrypted filesystem"
-    encfs --extpass="echo ${ENCFSPASS}" \
-        ${MOUNTBASE}/acd-encrypted/${MOUNTPREFIX} ${MOUNTBASE}/acd-decrypted/
-
-    ACDToolsLog info "Mounting UnionFS"
-    unionfs-fuse -o cow,allow_other \
-        ${MOUNTBASE}/local-decrypted=RW:${MOUNTBASE}/acd-decrypted=RO \
-        ${DATADIR}
-}
-
 # Reflect unionfs deleted file objects on Amazon Drive
 function ACDToolsSyncDeletes {
     ACDMOUNT="${MOUNTBASE}/acd-encrypted/"
