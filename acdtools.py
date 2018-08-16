@@ -192,7 +192,10 @@ def sync_deletes() -> None:
 
 def _mount() -> None:
     # TODO fill in
-    pass
+    mount_base = Path(config['mount_base'])
+    remote_encrypted = mount_base / 'acd-encrypted'
+    remote_decrypted = mount_base / 'acd-decrypted'
+    local_encrypted = mount_base / 'local-encrypted'
 
 
 def mount() -> None:
