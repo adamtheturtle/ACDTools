@@ -218,16 +218,35 @@ def _mount() -> None:
         '--extpass',
         'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
         '--reverse',
-        str(remote_mount),
+        str(local_decrypted),
         str(local_encrypted),
     ]
     subprocess.run(args=encfs_args, check=True)
 
     message = 'Mounting cloud decrypted filesystem'
     logger.info(message)
+    encfs_args = [
+        'encfs',
+        '--extpass',
+        'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
+        str(remote_mount),
+        str(remote_decrypted),
+    ]
+    subprocess.run(args=encfs_args, check=True)
 
     message = 'Mounting UnionFS'
     logger.info(message)
+    unionfs_fuse_args = [
+        'unionfs-fuse',
+        '-o',
+        'cow,allow_other',
+        '{local_decrypted}=RW:{remote_decrypted}=RO'.format(
+            local_decrypted=str(local_decrypted),
+            decrypted_decrypted=str(decrypted_decrypted),
+        ),
+        data_dir,
+    ]
+    subprocess.run(args=unionfs_fuse_args, check=True)
 
 
 def mount() -> None:
