@@ -217,6 +217,7 @@ def _mount() -> None:
         'encfs',
         '--extpass',
         'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
+        '--reverse',
         str(remote_mount),
         str(local_encrypted),
     ]
