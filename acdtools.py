@@ -174,7 +174,10 @@ def unmount_all(config: Dict[str, str]) -> None:
 
 def upload() -> None:
     # TODO fill in
-    pass
+    message = 'Upload Complete - Syncing changes'
+    logger.info(message)
+    _local_cleanup(config=config)
+    upload_pid_file.unlink()
 
 
 def sync_nodes() -> None:
