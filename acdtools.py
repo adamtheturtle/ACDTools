@@ -188,12 +188,17 @@ def sync_nodes() -> None:
     pass
 
 
-def sync_deletes() -> None:
+@config_option
+def sync_deletes(config: Dict[str, str]) -> None:
     # TODO fill in
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
     local_decrypted = mount_base / 'local-decrypted'
     search_dir = local_decrypted / '.unionfs-fuse'
+
+    rclone_binary = Path(config['rclone'])
+    rclone_remote = 'Google'
+
 
     if not (search_dir.exists() and search_dir.is_dir()):
         message = 'No .unionfs-fuse/ directory found, no to delete'
@@ -221,12 +226,21 @@ def sync_deletes() -> None:
 
         encname = encfsctl_result.stdout
 
-        if int(encname):
+        if encname:
             # TODO got here
             rclone_args = [
-
+                str(rclone_binary),
+                'ls',
+                '--max-depth',
+                '1',
+                '{rclone_remote}:{path_on_cloud_drive}/{encname}'.format(
+                    rclone_remote=rclone_remote,
+                    path_on_cloud_drive=path_on_cloud_drive,
+                    encname=encname,
+                )
             ]
             pass
+            # returncode
 
 
 def _mount(config: Dict[str, str]) -> None:
