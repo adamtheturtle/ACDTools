@@ -237,7 +237,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
                     rclone_remote=rclone_remote,
                     path_on_cloud_drive=path_on_cloud_drive,
                     encname=encname,
-                )
+                ),
             ]
             pass
             # returncode
