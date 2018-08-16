@@ -172,8 +172,9 @@ def unmount_all(config: Dict[str, str]) -> None:
     _unmount(mountpoint=local_encrypted)
 
 
-def upload() -> None:
-    # TODO fill in
+@config_option
+def upload(config: Dict[str, str]) -> None:
+    upload_pid_file = Path(__file__) / 'upload.pid'
     message = 'Upload Complete - Syncing changes'
     logger.info(message)
     _local_cleanup(config=config)
@@ -199,6 +200,8 @@ def sync_deletes(config: Dict[str, str]) -> None:
     rclone_binary = Path(config['rclone'])
     rclone_remote = 'Google'
 
+    encfs_pass = str(config['encfs_pass'])
+    path_on_cloud_drive = config['path_on_cloud_drive']
 
     if not (search_dir.exists() and search_dir.is_dir()):
         message = 'No .unionfs-fuse/ directory found, no to delete'
