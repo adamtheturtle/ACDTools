@@ -214,6 +214,15 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
         message = 'Running cloud storage mount in the foreground'
         logger.info(message)
         _unmount(mountpoint=remote_encrypted)
+        # TODO these args, and run these
+        plexdrive_args = []
+
+        message = (
+            'Cloud storage mount exited - checking if to remount in a couple '
+            'of seconds'
+        )
+        logger.info(message)
+        time.sleep(2)
 
 
         # TODO fill in
