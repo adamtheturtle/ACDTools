@@ -200,7 +200,30 @@ def sync_deletes() -> None:
     hidden_flag = '_HIDDEN~'
     matched_files = search_dir.rglob(pattern='*' + hidden_flag)
     for matched_file in matched_files:
-        pass
+        filename = matched_file.name
+        encfsctl_args = [
+            'encfsctl',
+            'encode',
+            '--extpass',
+            'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
+            str(remote_encrypted),
+            '"{filename}"'.format(filename=filename),
+        ]
+
+        encfsctl_result = subprocess.run(
+            args=encfsctl_args,
+            check=True,
+            stdout=subprocess.PIPE,
+        )
+
+        encname = encfsctl_result.stdout
+
+        if int(encname):
+            # TODO got here
+            rclone_args = [
+
+            ]
+            pass
 
 
 def _mount(config: Dict[str, str]) -> None:
