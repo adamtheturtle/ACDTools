@@ -202,6 +202,9 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
     hidden_flag = '_HIDDEN~'
     matched_files = search_dir.rglob(pattern='*' + hidden_flag)
+
+    failed_sync_deletes = False
+
     for matched_file in matched_files:
         filename = matched_file.name
         encfsctl_args = [
@@ -224,9 +227,8 @@ def sync_deletes(config: Dict[str, str]) -> None:
         if not encname:
             message = 'Empty name returned from encfsctl - skipping.'
             logger.error(message)
-            # Delete the search directory so that it is not uploaded as an
-            # empty directory.
-            search_dir.unlink()
+            failed_sync_deletes = True
+            continue
 
         rclone_path = '{rclone_remote}:{path_on_cloud_drive}/{encname}'.format(
             rclone_remote=rclone_remote,
@@ -254,6 +256,11 @@ def sync_deletes(config: Dict[str, str]) -> None:
             'delete',
             rclone_path,
         ]
+
+    if failed_sync_deletes:
+        # Delete the search directory so that it is not uploaded as an
+        # empty directory.
+        search_dir.unlink()
 
 
 def _mount(config: Dict[str, str]) -> None:
