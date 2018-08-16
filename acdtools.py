@@ -78,7 +78,7 @@ def config_option(command: Callable[..., None]) -> Callable[..., None]:
     return function
 
 
-def _local_cleanup() -> None:
+def _local_cleanup(config: Dict[str, str]) -> None:
     """
     Delete local data older than "days_to_keep_local" from the configuration
     file.
@@ -190,7 +190,7 @@ def sync_deletes() -> None:
     pass
 
 
-def _mount() -> None:
+def _mount(config: Dict[str, str]) -> None:
     # TODO fill in
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
@@ -204,6 +204,11 @@ def _mount() -> None:
     local_encrypted.mkdir(exist_ok=True)
     local_decrypted.mkdir(exist_ok=True)
     data_dir.mkdir(exist_ok=True)
+
+    encfs_pass = str(config['encfs_pass'])
+
+    path_on_cloud_drive = config['path_on_cloud_drive']
+    remote_mount = remote_encrypted / path_on_cloud_drive
 
     message = 'Mounting cloud storage drive'
     logger.info(message)
