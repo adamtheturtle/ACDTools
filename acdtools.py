@@ -207,10 +207,13 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
     unmount_lock_file = Path(__file__) / 'unmount.acd'
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
+    chunks_dir = mount_base / 'chunks'
+    chunks_dir.mkdir(exist_ok=True)
 
     while not unmount_lock_file.exists():
         message = 'Running cloud storage mount in the foreground'
         logger.info(message)
         _unmount(mountpoint=remote_encrypted)
+
 
         # TODO fill in
