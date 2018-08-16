@@ -200,6 +200,17 @@ def mount() -> None:
     _mount()
 
 
-def acd_cli_mount() -> None:
-    # TODO fill in
-    pass
+def acd_cli_mount(config: Dict[str, str]) -> None:
+    """
+    Foreground mount which will keep remounting until unmount file exists.
+    """
+    unmount_lock_file = Path(__file__) / 'unmount.acd'
+    mount_base = Path(config['mount_base'])
+    remote_encrypted = mount_base / 'acd-encrypted'
+
+    while not unmount_lock_file.exists():
+        message = 'Running cloud storage mount in the foreground'
+        logger.info(message)
+        _unmount(mountpoint=remote_encrypted)
+
+        # TODO fill in
