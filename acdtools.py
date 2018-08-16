@@ -269,6 +269,7 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
     remote_encrypted = mount_base / 'acd-encrypted'
     chunks_dir = mount_base / 'chunks'
     chunks_dir.mkdir(exist_ok=True)
+    plexdrive_binary = Path(config['plexdrive'])
 
     while not unmount_lock_file.exists():
         message = 'Running cloud storage mount in the foreground'
