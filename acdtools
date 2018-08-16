@@ -22,9 +22,6 @@ function ACDToolsSyncDeletes {
                 done
 
                 ACDToolsLog info "${FILENAME} deleted from cloud drive"
-            else
-                ACDToolsLog info "${file#$SEARCHDIR} is not on cloud drive"
-            fi
 
             # Remove the UnionFS hidden object
             rm -rf "${file}"

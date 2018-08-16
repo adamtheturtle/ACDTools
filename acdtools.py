@@ -245,7 +245,11 @@ def sync_deletes(config: Dict[str, str]) -> None:
         ]
         rclone_output = subprocess.run(args=rclone_args)
         rclone_status_code = rclone_output.returncode
-        if rclone_status_code == 0:
+        if rclone_status_code:
+            message = '{matched_file} is not on a cloud drive'.format(
+                matched_file=str(matched_file),
+            )
+        else:
             message = '{matched_file} exists on cloud drive - deleting'.format(
                 matched_file=str(matched_file),
             )
@@ -261,6 +265,10 @@ def sync_deletes(config: Dict[str, str]) -> None:
         # Delete the search directory so that it is not uploaded as an
         # empty directory.
         search_dir.unlink()
+        return
+
+    message = 'Not clearing .unionfs directory as there were failures.'
+    logger.warn(message)
 
 
 def _mount(config: Dict[str, str]) -> None:
