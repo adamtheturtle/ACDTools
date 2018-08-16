@@ -196,6 +196,26 @@ def _mount() -> None:
     remote_encrypted = mount_base / 'acd-encrypted'
     remote_decrypted = mount_base / 'acd-decrypted'
     local_encrypted = mount_base / 'local-encrypted'
+    local_decrypted = mount_base / 'local-decrypted'
+    data_dir = Path(config['data_dir'])
+
+    remote_encrypted.mkdir(exist_ok=True)
+    remote_decrypted.mkdir(exist_ok=True)
+    local_encrypted.mkdir(exist_ok=True)
+    local_decrypted.mkdir(exist_ok=True)
+    data_dir.mkdir(exist_ok=True)
+
+    message = 'Mounting cloud storage drive'
+    logger.info(message)
+
+    message = 'Mounting local encrypted filesystem'
+    logger.info(message)
+
+    message = 'Mounting cloud decrypted filesystem'
+    logger.info(message)
+
+    message = 'Mounting UnionFS'
+    logger.info(message)
 
 
 def mount() -> None:
