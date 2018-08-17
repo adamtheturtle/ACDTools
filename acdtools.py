@@ -348,14 +348,15 @@ def _mount(config: Dict[str, str]) -> None:
             local_decrypted=str(local_decrypted),
             remote_decrypted=str(remote_decrypted),
         ),
-        data_dir,
+        str(data_dir),
     ]
     subprocess.run(args=unionfs_fuse_args, check=True)
 
 
-def mount() -> None:
+@config_option
+def mount(config: Dict[str, str]) -> None:
     unmount_all()
-    _mount()
+    _mount(config=config)
 
 
 def _acd_cli_mount(config: Dict[str, str]):
@@ -371,7 +372,7 @@ def _acd_cli_mount(config: Dict[str, str]):
         logger.info(message)
         _unmount(mountpoint=remote_encrypted)
         plexdrive_args = [
-            plexdrive_binary,
+            str(plexdrive_binary),
             '-o',
             'allow-other,read_only',
             '-v',
