@@ -249,17 +249,22 @@ def sync_deletes(config: Dict[str, str]) -> None:
             message = '{matched_file} is not on a cloud drive'.format(
                 matched_file=str(matched_file),
             )
+            logger.info(message)
         else:
             message = '{matched_file} exists on cloud drive - deleting'.format(
                 matched_file=str(matched_file),
             )
+            logger.info(message)
 
-        # TODO got here
-        rclone_delete_args = [
-            str(rclone_binary),
-            'delete',
-            rclone_path,
-        ]
+            rclone_delete_args = [
+                str(rclone_binary),
+                'delete',
+                rclone_path,
+            ]
+
+            while subprocess.run(args=rclone_delete_args).returncode != 0:
+                message = 'Delete failed, trying again in 30 seconds'
+                time.sleep(30)
 
     if failed_sync_deletes:
         # Delete the search directory so that it is not uploaded as an
