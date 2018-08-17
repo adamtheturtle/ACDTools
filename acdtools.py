@@ -269,7 +269,9 @@ def sync_deletes(config: Dict[str, str]) -> None:
                 matched_file=str(matched_file),
             )
             logger.info(message)
-            matched_file.unlink()
+
+        # Remove the UnionFS hidden object
+        matched_file.unlink()
 
     if failed_sync_deletes:
         # Delete the search directory so that it is not uploaded as an
