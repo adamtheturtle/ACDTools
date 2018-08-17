@@ -364,8 +364,8 @@ def _sync_deletes(config: Dict[str, str]) -> None:
     LOGGER.warning(message)
 
 
+@click.command('sync-deletes')
 @config_option
-@click.option('sync-deletes')
 def sync_deletes(ctx: click.core.Context, config: Dict[str, str]) -> None:
     """
     Reflect unionfs deleted file objects on Google Drive.
