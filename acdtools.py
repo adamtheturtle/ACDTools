@@ -193,7 +193,6 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     upload_pid_file.write_text(str(current_pid))
     _sync_deletes()
 
-
     rclone_binary = Path(config['rclone'])
     rclone_remote = 'Google'
     # Determine the .unionfs-fuse directory name as to not upload it
