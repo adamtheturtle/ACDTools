@@ -265,6 +265,12 @@ def sync_deletes(config: Dict[str, str]) -> None:
                 logger.error(message)
                 time.sleep(30)
 
+            message = '{matched_file} deleted from cloud drive'.format(
+                matched_file=str(matched_file),
+            )
+            logger.info(message)
+            matched_file.unlink()
+
     if failed_sync_deletes:
         # Delete the search directory so that it is not uploaded as an
         # empty directory.
