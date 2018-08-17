@@ -33,9 +33,9 @@ def _validate_config(
     ])
     optional_keys = set(['http_proxy', 'https_proxy'])
 
-    allowed_keys = required_keys + optional_keys
+    allowed_keys = {*required_keys, *optional_keys}
 
-    config = yaml.load(value)
+    config = yaml.load(str(value))
 
     missing_required_keys = required_keys - config.keys()
     extra_keys = config.keys() - allowed_keys
@@ -108,8 +108,12 @@ def _local_cleanup(config: Dict[str, str]) -> None:
             path.unlink()
 
 
-# TODO make this run on the group
-def _dependency_check(rclone_binary: Path, plexdrive_binary: Path) -> None:
+# TODO make this run on every command
+def _dependency_check(
+    ctx: click.core.Context,
+    rclone_binary: Path,
+    plexdrive_binary: Path,
+) -> None:
     # TODO binaries from config
     dependencies = (
         rclone_binary,
@@ -120,12 +124,12 @@ def _dependency_check(rclone_binary: Path, plexdrive_binary: Path) -> None:
         'screen',
     )
     for dependency in dependencies:
-        if shutil.which(dependency) is None:
+        if shutil.which(str(dependency)) is None:
             message = '"{dependency}" is not available on the PATH.'.format(
                 dependency=dependency,
             )
 
-            click.fail(message=message)
+            ctx.fail(message=message)
 
 
 def _unmount(mountpoint: Path) -> None:
@@ -174,7 +178,10 @@ def unmount_all(config: Dict[str, str]) -> None:
 
 @config_option
 def upload(config: Dict[str, str]) -> None:
+    # TODO fill in
     upload_pid_file = Path(__file__) / 'upload.pid'
+    running_pid = 'TODO'
+
     message = 'Upload Complete - Syncing changes'
     logger.info(message)
     _local_cleanup(config=config)
@@ -284,7 +291,6 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
 
 def _mount(config: Dict[str, str]) -> None:
-    # TODO fill in
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
     remote_decrypted = mount_base / 'acd-decrypted'
@@ -307,7 +313,7 @@ def _mount(config: Dict[str, str]) -> None:
     logger.info(message)
     # In the original script this is in a ``screen``.
     # Why?
-    acd_cli_mount()
+    _acd_cli_mount(config=config)
 
     message = 'Mounting local encrypted filesystem'
     logger.info(message)
@@ -352,10 +358,7 @@ def mount() -> None:
     _mount()
 
 
-def acd_cli_mount(config: Dict[str, str]) -> None:
-    """
-    Foreground mount which will keep remounting until unmount file exists.
-    """
+def _acd_cli_mount(config: Dict[str, str]):
     unmount_lock_file = Path(__file__) / 'unmount.acd'
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
@@ -390,3 +393,10 @@ def acd_cli_mount(config: Dict[str, str]) -> None:
 
     message = 'The acdcli mount exited cleanly'
     unmount_lock_file.unlink()
+
+@config_option
+def acd_cli_mount(config: Dict[str, str]) -> None:
+    """
+    Foreground mount which will keep remounting until unmount file exists.
+    """
+    _acd_cli_mount(config=config)
