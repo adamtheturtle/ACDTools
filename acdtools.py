@@ -143,11 +143,11 @@ def _unmount(mountpoint: Path) -> None:
         message = 'Cannot unmount "{mountpoint}" - it is not mounted'.format(
             mountpoint=str(mountpoint),
         )
-        logger.warn(message=message)
+        logger.warn(msg=message)
         return
 
     message = 'Unmounting "{mountpoint}"'.format(mountpoint=str(mountpoint))
-    logger.info(message=message)
+    logger.info(msg=message)
     unmount_args = ['fusermount', '-u', str(mountpoint)]
     subprocess.run(args=unmount_args, check=True)
 
