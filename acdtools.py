@@ -178,7 +178,9 @@ def unmount_all(config: Dict[str, str]) -> None:
 
 @config_option
 def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
-    # TODO fill in
+    """
+    Upload local data to the cloud.
+    """
     upload_pid_file = Path(__file__) / 'upload.pid'
     if upload_pid_file.exists():
         running_pid = upload_pid_file.read_text()
@@ -189,6 +191,7 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
                 LOGGER.error(msg=message)
                 ctx.fail(message=message)
 
+    encfs_pass = str(config['encfs_pass'])
     current_pid = os.getpid()
     upload_pid_file.write_text(str(current_pid))
     _sync_deletes()
