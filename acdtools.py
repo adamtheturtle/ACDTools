@@ -216,17 +216,17 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     exclude_name_result = subprocess.run(args=exclude_name_args, check=True)
     exclude_name = exclude_name_result.stdout
 
-    exclude_args = []
+    upload_args = [
+        str(rclone_binary),
+        '-v',
+    ]
     if len(exclude_name):
-        exclude_args = [
+        upload_args += [
             '--exclude',
             '/{exclude_name}/*'.format(exclude_name=exclude_name),
         ]
 
-    upload_args = [
-        str(rclone_binary),
-        '-v',
-    ] + exclude_args + [
+    upload_args += [
         str(local_encrypted),
         '{rclone_remote}:{path_on_cloud_drive}'.format(
             rclone_remote,
