@@ -113,13 +113,11 @@ def _local_cleanup(config: Dict[str, str]) -> None:
             path.unlink()
 
 
-# TODO make this run on every command
 def _dependency_check(
     ctx: click.core.Context,
     rclone_binary: Path,
     plexdrive_binary: Path,
 ) -> None:
-    # TODO binaries from config
     dependencies = (
         rclone_binary,
         plexdrive_binary,
