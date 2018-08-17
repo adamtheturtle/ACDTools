@@ -209,7 +209,7 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
         'encode',
         '--extpass',
         'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
-        remote_encrypted,
+        str(remote_encrypted),
         '.unionfs-fuse',
     ]
 
