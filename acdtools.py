@@ -198,6 +198,10 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
 
     rclone_binary = Path(config['rclone'])
     rclone_remote = 'Google'
+
+    remote_encrypted = mount_base / 'acd-encrypted'
+    local_encrypted = mount_base / 'local-encrypted'
+
     # Determine the .unionfs-fuse directory name as to not upload it
     exclude_name_args = [
         'encfsctl',
@@ -220,12 +224,12 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
 
     upload_args = [
         str(rclone_binary),
-        '-v'
+        '-v',
     ] + exclude_args + [
         str(local_encrypted),
         '{rclone_remote}:{path_on_cloud_drive}'.format(
-            rclone_remote
-        )
+            rclone_remote,
+        ),
     ]
 
     children = str(local_encrypted.glob('*'))
