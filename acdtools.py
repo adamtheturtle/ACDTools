@@ -183,7 +183,9 @@ def upload(config: Dict[str, str]) -> None:
 
 @config_option
 def sync_deletes(config: Dict[str, str]) -> None:
-    # TODO fill in
+    """
+    Reflect unionfs deleted file objects on Google Drive.
+    """
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
     local_decrypted = mount_base / 'local-decrypted'

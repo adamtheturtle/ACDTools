@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Reflect unionfs deleted file objects on Amazon Drive
 function ACDToolsSyncDeletes {
 
     # For every file listed by the find command
