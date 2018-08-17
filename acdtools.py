@@ -199,6 +199,7 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     rclone_binary = Path(config['rclone'])
     rclone_remote = 'Google'
 
+    mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
     local_encrypted = mount_base / 'local-encrypted'
 
@@ -213,7 +214,7 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     ]
 
     exclude_name_result = subprocess.run(args=exclude_name_args, check=True)
-    exclude_name = exclude_name.stdout
+    exclude_name = exclude_name_result.stdout
 
     exclude_args = []
     if len(exclude_name):
