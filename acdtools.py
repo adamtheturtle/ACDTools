@@ -264,6 +264,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
             while subprocess.run(args=rclone_delete_args).returncode != 0:
                 message = 'Delete failed, trying again in 30 seconds'
+                logger.error(message)
                 time.sleep(30)
 
     if failed_sync_deletes:
