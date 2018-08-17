@@ -194,7 +194,7 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     encfs_pass = str(config['encfs_pass'])
     current_pid = os.getpid()
     upload_pid_file.write_text(str(current_pid))
-    _sync_deletes()
+    _sync_deletes(config=config)
 
     rclone_binary = Path(config['rclone'])
     rclone_remote = 'Google'
