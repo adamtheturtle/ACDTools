@@ -4,21 +4,21 @@ import os
 import shutil
 import subprocess
 import time
-import yaml
 from pathlib import Path
 from typing import Callable, Dict, Optional, Union
 
 import click
+import yaml
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # TODO make public functions click commands
 
 
 def _validate_config(
-        ctx: click.core.Context,
-        param: Union[click.core.Option, click.core.Parameter],
-        value: Optional[Union[int, bool, str]],
+    ctx: click.core.Context,
+    param: Union[click.core.Option, click.core.Parameter],
+    value: Optional[Union[int, bool, str]],
 ) -> Dict[str, str]:
     required_keys = set([
         'data_dir',
@@ -93,7 +93,7 @@ def _local_cleanup(config: Dict[str, str]) -> None:
         days_to_keep_local=days_to_keep_local,
     )
 
-    logger.info(message)
+    LOGGER.info(message)
 
     seconds_to_keep_local = days_to_keep_local * 24 * 60 * 60
 
@@ -143,11 +143,11 @@ def _unmount(mountpoint: Path) -> None:
         message = 'Cannot unmount "{mountpoint}" - it is not mounted'.format(
             mountpoint=str(mountpoint),
         )
-        logger.warn(msg=message)
+        LOGGER.warning(msg=message)
         return
 
     message = 'Unmounting "{mountpoint}"'.format(mountpoint=str(mountpoint))
-    logger.info(msg=message)
+    LOGGER.info(msg=message)
     unmount_args = ['fusermount', '-u', str(mountpoint)]
     subprocess.run(args=unmount_args, check=True)
 
@@ -158,7 +158,7 @@ def unmount_all(config: Dict[str, str]) -> None:
     Unmount all mountpoints associated with ACDTools.
     """
     message = 'Unmounting all ACDTools mountpoints'
-    logger.info(message)
+    LOGGER.info(message)
 
     data_dir = Path(config['data_dir'])
     mount_base = Path(config['mount_base'])
@@ -183,7 +183,7 @@ def upload(config: Dict[str, str]) -> None:
     running_pid = 'TODO'
 
     message = 'Upload Complete - Syncing changes'
-    logger.info(message)
+    LOGGER.info(message)
     _local_cleanup(config=config)
     upload_pid_file.unlink()
 
@@ -206,7 +206,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
     if not (search_dir.exists() and search_dir.is_dir()):
         message = 'No .unionfs-fuse/ directory found, no to delete'
-        logger.info(message)
+        LOGGER.info(message)
         return
 
     hidden_flag = '_HIDDEN~'
@@ -235,7 +235,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
         if not encname:
             message = 'Empty name returned from encfsctl - skipping.'
-            logger.error(message)
+            LOGGER.error(message)
             failed_sync_deletes = True
             continue
 
@@ -258,24 +258,24 @@ def sync_deletes(config: Dict[str, str]) -> None:
             message = '{matched_file} is not on a cloud drive'.format(
                 matched_file=str(matched_file),
             )
-            logger.info(message)
+            LOGGER.info(message)
         else:
             message = '{matched_file} exists on cloud drive - deleting'.format(
                 matched_file=str(matched_file),
             )
-            logger.info(message)
+            LOGGER.info(message)
 
             rclone_delete_args = [str(rclone_binary), 'delete', rclone_path]
 
             while subprocess.run(args=rclone_delete_args).returncode != 0:
                 message = 'Delete failed, trying again in 30 seconds'
-                logger.error(message)
+                LOGGER.error(message)
                 time.sleep(30)
 
             message = '{matched_file} deleted from cloud drive'.format(
                 matched_file=str(matched_file),
             )
-            logger.info(message)
+            LOGGER.info(message)
 
         # Remove the UnionFS hidden object.
         matched_file.unlink()
@@ -287,7 +287,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
         return
 
     message = 'Not clearing .unionfs directory as there were failures.'
-    logger.warn(message)
+    LOGGER.warning(message)
 
 
 def _mount(config: Dict[str, str]) -> None:
@@ -310,13 +310,13 @@ def _mount(config: Dict[str, str]) -> None:
     remote_mount = remote_encrypted / path_on_cloud_drive
 
     message = 'Mounting cloud storage drive'
-    logger.info(message)
+    LOGGER.info(message)
     # In the original script this is in a ``screen``.
     # Why?
     _acd_cli_mount(config=config)
 
     message = 'Mounting local encrypted filesystem'
-    logger.info(message)
+    LOGGER.info(message)
     encfs_args = [
         'encfs',
         '--extpass',
@@ -328,7 +328,7 @@ def _mount(config: Dict[str, str]) -> None:
     subprocess.run(args=encfs_args, check=True)
 
     message = 'Mounting cloud decrypted filesystem'
-    logger.info(message)
+    LOGGER.info(message)
     encfs_args = [
         'encfs',
         '--extpass',
@@ -339,7 +339,7 @@ def _mount(config: Dict[str, str]) -> None:
     subprocess.run(args=encfs_args, check=True)
 
     message = 'Mounting UnionFS'
-    logger.info(message)
+    LOGGER.info(message)
     unionfs_fuse_args = [
         'unionfs-fuse',
         '-o',
@@ -369,7 +369,7 @@ def _acd_cli_mount(config: Dict[str, str]):
 
     while not unmount_lock_file.exists():
         message = 'Running cloud storage mount in the foreground'
-        logger.info(message)
+        LOGGER.info(message)
         _unmount(mountpoint=remote_encrypted)
         plexdrive_args = [
             str(plexdrive_binary),
@@ -389,11 +389,12 @@ def _acd_cli_mount(config: Dict[str, str]):
             'Cloud storage mount exited - checking if to remount in a couple '
             'of seconds'
         )
-        logger.info(message)
+        LOGGER.info(message)
         time.sleep(2)
 
     message = 'The acdcli mount exited cleanly'
     unmount_lock_file.unlink()
+
 
 @config_option
 def acd_cli_mount(config: Dict[str, str]) -> None:
