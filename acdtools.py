@@ -444,8 +444,8 @@ def _mount(config: Dict[str, str]) -> None:
     subprocess.run(args=unionfs_fuse_args, check=True)
 
 
+@click.command('mount')
 @config_option
-@click.option('mount')
 def mount(ctx: click.core.Context, config: Dict[str, str]) -> None:
     rclone_binary = Path(config['rclone'])
     plexdrive_binary = Path(config['plexdrive'])
@@ -518,3 +518,6 @@ plex_tools.add_command(mount)
 plex_tools.add_command(sync_deletes)
 plex_tools.add_command(unmount_all)
 plex_tools.add_command(upload)
+
+if __name__ == '__main__':
+    plex_tools()
