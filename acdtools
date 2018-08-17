@@ -2,18 +2,6 @@
 
 # Upload local data to Amazon Drive
 function ACDToolsUpload {
-    # Exit if already being executed
-    RUNNINGPID=`cat ${DIR}/upload.pid 2>/dev/null`
-    if [ -e /proc/${RUNNINGPID} ] && [ ! -z ${RUNNINGPID} ]; then
-        ACDToolsLog error "Upload script already running"
-        exit 1
-    else
-        echo $$ > ${DIR}/upload.pid
-    fi
-
-    # Sync Deletes
-    ACDToolsSyncDeletes
-
     # Logic for force syncing on repeated failure
     ULATTEMPTS=0
 

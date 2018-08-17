@@ -193,7 +193,60 @@ def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     upload_pid_file.write_text(str(current_pid))
     _sync_deletes()
 
-    running_pid = 'TODO'
+
+    rclone_binary = Path(config['rclone'])
+    rclone_remote = 'Google'
+    # Determine the .unionfs-fuse directory name as to not upload it
+    exclude_name_args = [
+        'encfsctl',
+        'encode',
+        '--extpass',
+        'echo {encfs_pass}'.format(encfs_pass=encfs_pass),
+        remote_encrypted,
+        '.unionfs-fuse',
+    ]
+
+    exclude_name_result = subprocess.run(args=exclude_name_args, check=True)
+    exclude_name = exclude_name.stdout
+
+    exclude_args = []
+    if len(exclude_name):
+        exclude_args = [
+            '--exclude',
+            '/{exclude_name}/*'.format(exclude_name=exclude_name),
+        ]
+
+    upload_args = [
+        str(rclone_binary),
+        '-v'
+    ] + exclude_args + [
+        str(local_encrypted),
+        '{rclone_remote}:{path_on_cloud_drive}'.format(
+            rclone_remote
+        )
+    ]
+
+    children = str(local_encrypted.glob('*'))
+    upload_attempts = 0
+
+    if children:
+        while subprocess.run(args=upload_args).returncode != 0:
+            upload_attempts += 1
+            message = (
+                'Some uploads failed - uploading again after a sync '
+                'sync (attempt {upload_attempts})'
+            ).format(
+                upload_attempts=upload_attempts,
+            )
+
+            if upload_attempts >= 5:
+                message = 'Upload failed 5 times - giving up'
+                ctx.fail(message=message)
+    else:
+        message = '{local_encrypted} is empty - nothing to upload'.format(
+            local_encrypted=str(local_encrypted),
+        )
+        LOGGER.info(msg=message)
 
     message = 'Upload Complete - Syncing changes'
     LOGGER.info(message)
