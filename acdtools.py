@@ -270,7 +270,7 @@ def sync_deletes(config: Dict[str, str]) -> None:
             )
             logger.info(message)
 
-        # Remove the UnionFS hidden object
+        # Remove the UnionFS hidden object.
         matched_file.unlink()
 
     if failed_sync_deletes:
