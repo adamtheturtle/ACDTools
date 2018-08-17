@@ -12,7 +12,12 @@ import yaml
 
 LOGGER = logging.getLogger(__name__)
 
-# TODO make public functions click commands
+
+@click.group(name='plex-tools')
+def plex_tools() -> None:
+    """
+    Manage Plex tools.
+    """
 
 
 def _validate_config(
@@ -152,6 +157,7 @@ def _unmount(mountpoint: Path) -> None:
     subprocess.run(args=unmount_args, check=True)
 
 
+@click.command('unmount-all')
 @config_option
 def unmount_all(config: Dict[str, str]) -> None:
     """
@@ -176,6 +182,7 @@ def unmount_all(config: Dict[str, str]) -> None:
     _unmount(mountpoint=local_encrypted)
 
 
+@click.command('upload')
 @config_option
 def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     """
@@ -360,10 +367,19 @@ def _sync_deletes(config: Dict[str, str]) -> None:
 
 
 @config_option
-def sync_deletes(config: Dict[str, str]) -> None:
+@click.option('sync-deletes')
+def sync_deletes(ctx: click.core.Context, config: Dict[str, str]) -> None:
     """
     Reflect unionfs deleted file objects on Google Drive.
     """
+    rclone_binary = Path(config['rclone'])
+    plexdrive_binary = Path(config['plexdrive'])
+
+    _dependency_check(
+        ctx=ctx,
+        rclone_binary=rclone_binary,
+        plexdrive_binary=plexdrive_binary,
+    )
     _sync_deletes(config=config)
 
 
@@ -431,7 +447,16 @@ def _mount(config: Dict[str, str]) -> None:
 
 
 @config_option
-def mount(config: Dict[str, str]) -> None:
+@click.option('mount')
+def mount(ctx: click.core.Context, config: Dict[str, str]) -> None:
+    rclone_binary = Path(config['rclone'])
+    plexdrive_binary = Path(config['plexdrive'])
+
+    _dependency_check(
+        ctx=ctx,
+        rclone_binary=rclone_binary,
+        plexdrive_binary=plexdrive_binary,
+    )
     unmount_all()
     _mount(config=config)
 
@@ -473,9 +498,25 @@ def _acd_cli_mount(config: Dict[str, str]):
     unmount_lock_file.unlink()
 
 
+@click.command('acd-cli-mount')
 @config_option
-def acd_cli_mount(config: Dict[str, str]) -> None:
+def acd_cli_mount(ctx: click.core.Context, config: Dict[str, str]) -> None:
     """
     Foreground mount which will keep remounting until unmount file exists.
     """
+    rclone_binary = Path(config['rclone'])
+    plexdrive_binary = Path(config['plexdrive'])
+
+    _dependency_check(
+        ctx=ctx,
+        rclone_binary=rclone_binary,
+        plexdrive_binary=plexdrive_binary,
+    )
     _acd_cli_mount(config=config)
+
+
+plex_tools.add_command(acd_cli_mount)
+plex_tools.add_command(mount)
+plex_tools.add_command(sync_deletes)
+plex_tools.add_command(unmount_all)
+plex_tools.add_command(upload)
