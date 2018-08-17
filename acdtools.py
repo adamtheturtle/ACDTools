@@ -77,7 +77,7 @@ def config_option(command: Callable[..., None]) -> Callable[..., None]:
         '-c',
         type=click.Path(exists=True),
         callback=_validate_config,
-        default=default_config_path,
+        default=str(default_config_path),
         help='The path to a file including configuration YAML.',
     )(command)  # type: Callable[..., None]
     return function
