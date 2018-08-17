@@ -177,9 +177,22 @@ def unmount_all(config: Dict[str, str]) -> None:
 
 
 @config_option
-def upload(config: Dict[str, str]) -> None:
+def upload(ctx: click.core.Context, config: Dict[str, str]) -> None:
     # TODO fill in
     upload_pid_file = Path(__file__) / 'upload.pid'
+    if upload_pid_file.exists():
+        running_pid = upload_pid_file.read_text()
+        if len(running_pid):
+            proc_file = Path('/proc') / running_pid
+            if proc_file.exists():
+                message = 'Upload script already running'
+                LOGGER.error(msg=message)
+                ctx.fail(message=message)
+
+    current_pid = os.getpid()
+    upload_pid_file.write_text(str(current_pid))
+    _sync_deletes()
+
     running_pid = 'TODO'
 
     message = 'Upload Complete - Syncing changes'
@@ -188,11 +201,7 @@ def upload(config: Dict[str, str]) -> None:
     upload_pid_file.unlink()
 
 
-@config_option
-def sync_deletes(config: Dict[str, str]) -> None:
-    """
-    Reflect unionfs deleted file objects on Google Drive.
-    """
+def _sync_deletes(config: Dict[str, str]) -> None:
     mount_base = Path(config['mount_base'])
     remote_encrypted = mount_base / 'acd-encrypted'
     local_decrypted = mount_base / 'local-decrypted'
@@ -288,6 +297,14 @@ def sync_deletes(config: Dict[str, str]) -> None:
 
     message = 'Not clearing .unionfs directory as there were failures.'
     LOGGER.warning(message)
+
+
+@config_option
+def sync_deletes(config: Dict[str, str]) -> None:
+    """
+    Reflect unionfs deleted file objects on Google Drive.
+    """
+    _sync_deletes(config=config)
 
 
 def _mount(config: Dict[str, str]) -> None:
