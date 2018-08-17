@@ -13,8 +13,8 @@ import yaml
 LOGGER = logging.getLogger(__name__)
 
 
-@click.group(name='plex-tools')
-def plex_tools() -> None:
+@click.group(name='cloud-drive-tools')
+def cloud_drive_tools() -> None:
     """
     Manage Plex tools.
     """
@@ -513,11 +513,11 @@ def acd_cli_mount(ctx: click.core.Context, config: Dict[str, str]) -> None:
     _acd_cli_mount(config=config)
 
 
-plex_tools.add_command(acd_cli_mount)
-plex_tools.add_command(mount)
-plex_tools.add_command(sync_deletes)
-plex_tools.add_command(unmount_all)
-plex_tools.add_command(upload)
+cloud_drive_tools.add_command(acd_cli_mount)
+cloud_drive_tools.add_command(mount)
+cloud_drive_tools.add_command(sync_deletes)
+cloud_drive_tools.add_command(unmount_all)
+cloud_drive_tools.add_command(upload)
 
 if __name__ == '__main__':
-    plex_tools()
+    cloud_drive_tools()
